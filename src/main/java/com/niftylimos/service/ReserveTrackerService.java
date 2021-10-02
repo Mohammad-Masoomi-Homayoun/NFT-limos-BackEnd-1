@@ -13,13 +13,21 @@ import org.web3j.utils.Convert;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ReserveTrackerService {
+
     public static final Logger logger = LoggerFactory.getLogger(ReserveTrackerService.class);
+
+    private static final BigDecimal PRICE = Convert.toWei("0.08", Convert.Unit.ETHER);
+
+
+//    @Value("${niftylimos.web3Endpoint}")
+//    private String web3Endpoint;
 
     @Value("${niftylimos.etherscan.apikey}")
     private String apikey;
@@ -29,9 +37,11 @@ public class ReserveTrackerService {
 
     private RestTemplate restTemplate;
 
-    private String url;
+    private String etherscanEndpoint;
 
-    private ReserveStatus status;
+    private Map<String, Integer> accounts = new HashMap<>();
+
+    private int numReserved = 0;
 
     @PostConstruct
     private void init() {
@@ -47,30 +57,49 @@ public class ReserveTrackerService {
                         "sort=asc&" +
                         "apikey=%s";
         url = String.format(url, this.account, this.apikey);
-        this.url = url;
+        this.etherscanEndpoint = url;
         this.restTemplate = new RestTemplate();
     }
 
-    @Scheduled(fixedRate = 15 * 60 * 1000)
+    @Scheduled(fixedRate = 60 * 1000)
     private void update() {
-        logger.info("updating reserve status...");
-        ReserveStatus status = new ReserveStatus();
-        EtherScanResult result = this.restTemplate.postForObject(this.url, "", EtherScanResult.class);
-        List<Map<String, String>> txs = (List<Map<String, String>>) result.result;
-        long num;
-        BigDecimal price = Convert.toWei("0.08", Convert.Unit.ETHER);
-        num = txs.stream()
-                .filter(tx -> tx.get("to").equalsIgnoreCase(this.account) && (new BigDecimal(tx.get("value")).compareTo(price)) == 0)
-                .count();
-        status.setNumReserved(num);
-        status.setTimestamp(new Date().getTime());
-        status.setAccounts(null);
-        this.status = status;
-        logger.info("reserve status updated: {}", this.status.getNumReserved());
+        this.accounts.clear();
+        this.numReserved = 0;
+        EtherScanResult result =
+                this.restTemplate.postForObject(this.etherscanEndpoint, "", EtherScanResult.class);
+        if (result == null) {
+            throw new RuntimeException("result is null");
+        }
+        var txs = result.result;
+        List<Map<String, String>> valid_txs = txs.stream()
+                .filter(tx -> tx.get("to").equalsIgnoreCase(this.account))
+                .filter(tx -> {
+                            BigDecimal[] n = new BigDecimal(tx.get("value")).divideAndRemainder(PRICE);
+                            //expect minimum n[0] == 1, and n[1] == 0
+                            return n[0].compareTo(BigDecimal.ZERO) != 0 && n[1].compareTo(BigDecimal.ZERO) == 0;
+                        }
+                )
+                .collect(Collectors.toList());
+
+        for (Map<String, String> tx : valid_txs) {
+            String acc = tx.get("from").toLowerCase();
+            if (!this.accounts.containsKey(acc)) {
+                this.accounts.put(acc, 0);
+            }
+            this.accounts.put(acc, this.accounts.get(acc) + new BigDecimal(tx.get("value")).divide(PRICE).intValue());
+        }
+        this.numReserved = this.accounts.values().stream().mapToInt(integer -> integer).sum();
+        logger.info("reserve status updated");
     }
 
-    public ReserveStatus getStatus() {
-        return this.status;
+
+    public int getNumTotalReserved() {
+        return this.numReserved;
+    }
+
+    public int getNumAccountReserved(String account) {
+        account = account.toLowerCase();
+        return accounts.getOrDefault(account, 0);
     }
 
     @Data
@@ -79,6 +108,6 @@ public class ReserveTrackerService {
     private static class EtherScanResult {
         private String status;
         private String message;
-        private Object result;
+        private List<Map<String, String>> result;
     }
 }
