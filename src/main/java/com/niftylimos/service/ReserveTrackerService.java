@@ -46,7 +46,7 @@ public class ReserveTrackerService {
     @PostConstruct
     private void init() {
         String url =
-                "https://api-ropsten.etherscan.io/api?" +
+                "https://api.etherscan.io/api?" +
                         "module=account&" +
                         "action=txlist&" +
                         "address=%s&" +
