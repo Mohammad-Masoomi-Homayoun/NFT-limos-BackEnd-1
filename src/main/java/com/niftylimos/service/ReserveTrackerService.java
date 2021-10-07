@@ -79,6 +79,8 @@ public class ReserveTrackerService {
                             return n[0].compareTo(BigDecimal.ZERO) != 0 && n[1].compareTo(BigDecimal.ZERO) == 0;
                         }
                 )
+                //exclude refunded tx
+                .filter(tx -> !tx.get("hash").equalsIgnoreCase("0x02c503cb094bb2d345f6c3ec4504892879434002066b1347af856b555ef87205"))
                 .collect(Collectors.toList());
 
         for (Map<String, String> tx : valid_txs) {
