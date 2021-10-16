@@ -41,6 +41,11 @@ public class NiftyLimosPublicController {
         return service.getReservation(id);
     }
 
+    @RequestMapping(value = "/reservation/count")
+    public Long getReservation() {
+        return service.getReservationCount();
+    }
+
     @RequestMapping(value = "/limo/{id}")
     public LimoDTO getLimo(@PathVariable Long id) {
         return service.getLimo(id);

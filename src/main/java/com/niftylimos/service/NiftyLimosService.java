@@ -99,6 +99,10 @@ public class NiftyLimosService {
                 .collect(Collectors.toList());
     }
 
+    public Long getReservationCount(){
+        return reservationRepo.count();
+    }
+
     public LimoDTO getLimo(Long tokenId) {
         return limoRepo.findById(tokenId).map(this::limoToDTO).orElse(null);
     }

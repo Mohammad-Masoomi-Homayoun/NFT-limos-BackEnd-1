@@ -61,7 +61,7 @@ public class ReservationTrackerService {
 
     private void updateURL(Long startBlock, Long endBlock) {
         String url =
-                "https://api.etherscan.io/api?" +
+                "https://api-ropsten.etherscan.io/api?" +
                         "module=account&" +
                         "action=txlist&" +
                         "address=%s&" +
@@ -78,7 +78,7 @@ public class ReservationTrackerService {
     @PostConstruct
     private void init() {
         String url =
-                "https://api.etherscan.io/api?" +
+                "https://api-ropsten.etherscan.io/api?" +
                         "module=account&" +
                         "action=txlist&" +
                         "address=%s&" +
@@ -151,7 +151,7 @@ public class ReservationTrackerService {
     }
 
     private Long getEthLatestBlockNumber() {
-        String url = "https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=1M5FNB617T3228CQ3R4SIT8SF5QNX6JS8V";
+        String url = "https://api-ropsten.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=1M5FNB617T3228CQ3R4SIT8SF5QNX6JS8V";
         Map result = restTemplate.postForObject(url, "", Map.class);
         return Long.decode((String) result.get("result"));
     }
