@@ -1,13 +1,19 @@
 package com.niftylimos.web;
 
-import com.niftylimos.service.*;
+import com.niftylimos.service.AccountDTO;
+import com.niftylimos.service.LimoMetadataDTO;
+import com.niftylimos.service.NiftyLimosService;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 @RestController
 @RequestMapping("/api/")
@@ -21,24 +27,9 @@ public class NiftyLimosPublicController {
         this.service = service;
     }
 
-    @RequestMapping(value = "/account")
-    public List<AccountDTO> getAllAccounts() {
-        return service.getAllAccounts();
-    }
-
     @RequestMapping(value = "/account/{id}")
     public AccountDTO getAccount(@PathVariable String id) {
         return service.getAccount(id);
-    }
-
-    @RequestMapping(value = "/reservation")
-    public List<ReservationDTO> getAllReservation() {
-        return service.getAllReservations();
-    }
-
-    @RequestMapping(value = "/reservation/{id}")
-    public ReservationDTO getReservation(@PathVariable Long id) {
-        return service.getReservation(id);
     }
 
     @RequestMapping(value = "/reservation/count")
@@ -47,23 +38,31 @@ public class NiftyLimosPublicController {
     }
 
     @RequestMapping(value = "/limo/{id}")
-    public LimoDTO getLimo(@PathVariable Long id) {
-        return service.getLimo(id);
+    public LimoMetadataDTO getLimo(@PathVariable Long id) {
+        return service.getLimoMetadata(id);
     }
 
-    @RequestMapping(value = "/limo")
-    public List<LimoDTO> getAllLimos() {
-        return service.getAllLimos();
+    @RequestMapping(value = "/limo/image/{id}")
+    public void getImg(@PathVariable("id") String id, HttpServletResponse response) {
+        try {
+            response.setHeader("Content-disposition", "attachment; filename=" + id);
+            InputStream in = new ByteArrayInputStream(service.getLimoImage(id));
+            IOUtils.copy(in, response.getOutputStream());
+            response.flushBuffer();
+        } catch (IOException ex) {
+            throw new RuntimeException("IOError writing file to output stream");
+        }
     }
 
-    @RequestMapping(value = "/ticket")
-    public List<LimoTicketDTO> getAllTickets() {
-        return service.getAllTickets();
+    @RequestMapping(value = "/limo/animation/{id}")
+    public void getAnimation(@PathVariable("id") String id, HttpServletResponse response) {
+        try {
+            response.setHeader("Content-disposition", "attachment; filename=" + id);
+            InputStream in = new ByteArrayInputStream(service.getLimoAnimation(id));
+            IOUtils.copy(in, response.getOutputStream());
+            response.flushBuffer();
+        } catch (IOException ex) {
+            throw new RuntimeException("IOError writing file to output stream");
+        }
     }
-
-    @RequestMapping(value = "/ticket/{id}")
-    public LimoTicketDTO getTicket(@PathVariable Long id) {
-        return service.getTicket(id);
-    }
-
 }

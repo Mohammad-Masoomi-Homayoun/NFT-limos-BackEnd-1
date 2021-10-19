@@ -21,6 +21,9 @@ import org.web3j.crypto.Sign;
 import org.web3j.utils.Numeric;
 
 import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +41,12 @@ public class NiftyLimosService {
     private String privateKey;
 
     private ECKeyPair keyPair;
+
+    @Value("${niftylimos.limoImageRepository}")
+    private String limoImageRepository;
+
+    @Value("${niftylimos.limoAnimationRepository}")
+    private String limoAnimationRepository;
 
     private final AccountRepository accountRepo;
 
@@ -67,7 +76,7 @@ public class NiftyLimosService {
         logger.info("initialized");
     }
 
-    public Long setExpire(Long newExpire){
+    public Long setExpire(Long newExpire) {
         this.defaultExpire = newExpire;
         return this.defaultExpire;
     }
@@ -99,7 +108,7 @@ public class NiftyLimosService {
                 .collect(Collectors.toList());
     }
 
-    public Long getReservationCount(){
+    public Long getReservationCount() {
         return reservationRepo.count();
     }
 
@@ -182,7 +191,7 @@ public class NiftyLimosService {
     public void reserve(Account account) {
         Reservation reservation = new Reservation(account);
         reservationRepo.save(reservation);
-        if (this.issueTicketOnReservation){
+        if (this.issueTicketOnReservation) {
             Limo limo = limoRepo.findAllByReservationsEmpty().get(0);
             var ticket = issue(account, limo, defaultExpire);
             ticket.setReservation(reservation);
@@ -192,6 +201,34 @@ public class NiftyLimosService {
         reservationRepo.save(reservation);
     }
 
+    public LimoMetadataDTO getLimoMetadata(Long id) {
+        LimoMetadataDTO dto = new LimoMetadataDTO();
+        dto.setName("Limo #" + id);
+        dto.setDescription("Nifty Limos is an Ethereum-based NFT collection of 10K 3D rendered limos that you can race to win eth prizes! By buying a Nifty Limo, you gain access to an exclusive members-only experience, with a stellar community, curated NFT airdrops, and branded merchandise.");
+        dto.setImage("https://niftylimos.com/api/limo/image/before-reveal-limos.jpeg");
+        dto.setAnimation_url("https://niftylimos.com/api/limo/animation/before-reveal-limos.mp4");
+        return dto;
+    }
+
+    public byte[] getLimoImage(String img) {
+        File file = new File(limoImageRepository + File.separator + img);
+        try {
+            return new FileInputStream(file).readAllBytes();
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public byte[] getLimoAnimation(String img) {
+        File file = new File(limoAnimationRepository + File.separator + img);
+        try {
+            return new FileInputStream(file).readAllBytes();
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
 
     private AccountDTO accountToDTO(Account account) {
         AccountDTO dto = new AccountDTO();
