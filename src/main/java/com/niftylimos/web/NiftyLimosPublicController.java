@@ -46,6 +46,7 @@ public class NiftyLimosPublicController {
     public void getImg(@PathVariable("id") String id, HttpServletResponse response) {
         try {
             response.setHeader("Content-disposition", "attachment; filename=" + id);
+            response.setContentType("image/jpeg");
             InputStream in = new ByteArrayInputStream(service.getLimoImage(id));
             IOUtils.copy(in, response.getOutputStream());
             response.flushBuffer();
@@ -58,6 +59,7 @@ public class NiftyLimosPublicController {
     public void getAnimation(@PathVariable("id") String id, HttpServletResponse response) {
         try {
             response.setHeader("Content-disposition", "attachment; filename=" + id);
+            response.setContentType("video/mp4");
             InputStream in = new ByteArrayInputStream(service.getLimoAnimation(id));
             IOUtils.copy(in, response.getOutputStream());
             response.flushBuffer();
