@@ -205,8 +205,8 @@ public class NiftyLimosService {
         LimoMetadataDTO dto = new LimoMetadataDTO();
         dto.setName("Limo #" + id);
         dto.setDescription("Nifty Limos is an Ethereum-based NFT collection of 10K 3D rendered limos that you can race to win eth prizes! By buying a Nifty Limo, you gain access to an exclusive members-only experience, with a stellar community, curated NFT airdrops, and branded merchandise.");
-        dto.setImage("https://niftylimos.com/api/limo/image/before-reveal-limos.jpeg");
-        dto.setAnimation_url("https://niftylimos.com/api/limo/animation/before-reveal-limos.mp4");
+        dto.setImage("https://niftylimos.com:7070/api/limo/image/before-reveal-limos.jpeg");
+        dto.setAnimation_url("https://niftylimos.com:7070/api/limo/animation/before-reveal-limos.mp4");
         return dto;
     }
 
