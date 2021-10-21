@@ -4,10 +4,7 @@ package com.niftylimos.domain;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,13 +18,13 @@ public class Limo {
 
     private String status;
 
-    @OneToOne(mappedBy = "limo")
+    @OneToOne(mappedBy = "limo", fetch = FetchType.EAGER)
     private LimoData data;
 
-    @OneToMany(mappedBy = "limo")
+    @OneToMany(mappedBy = "limo", fetch = FetchType.EAGER)
     private List<Reservation> reservations = new ArrayList<>();
 
-    @OneToMany(mappedBy = "limo")
+    @OneToMany(mappedBy = "limo", fetch = FetchType.EAGER)
     private List<LimoTicket> tickets = new ArrayList<>();
 
 

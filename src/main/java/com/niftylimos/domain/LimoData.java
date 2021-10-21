@@ -4,10 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +22,7 @@ public class LimoData {
 
     private String image;
 
-    @OneToMany
+    @OneToMany(fetch = FetchType.EAGER)
     private List<LimoAttr> attributes = new ArrayList<>();
 
 }

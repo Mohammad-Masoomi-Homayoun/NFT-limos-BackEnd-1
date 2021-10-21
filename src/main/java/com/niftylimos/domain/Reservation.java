@@ -21,7 +21,7 @@ public class Reservation {
     @ManyToOne
     private Limo limo;
 
-    @OneToMany(mappedBy = "reservation")
+    @OneToMany(mappedBy = "reservation", fetch = FetchType.EAGER)
     private List<LimoTicket> tickets = new ArrayList<>();
 
     public Reservation(Account account){
