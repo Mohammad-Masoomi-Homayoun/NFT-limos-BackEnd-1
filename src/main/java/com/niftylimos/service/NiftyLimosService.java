@@ -74,7 +74,7 @@ public class NiftyLimosService {
     @PostConstruct
     private void init() {
         this.keyPair = ECKeyPair.create(Numeric.hexStringToByteArray(this.privateKey));
-        initLimos();
+//        initLimos();
         logger.info("initialized");
     }
 
