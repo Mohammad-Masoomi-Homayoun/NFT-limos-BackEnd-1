@@ -212,9 +212,9 @@ public class NiftyLimosService {
 
     public void reserve(Account account) {
         Reservation reservation = new Reservation(account);
-        reservationRepo.save(reservation);
+        reservation = reservationRepo.save(reservation);
         if (this.issueTicketOnReservation) {
-            Limo limo = limoRepo.findAllByReservationsEmpty().get(0);
+            Limo limo = getNextLimoForTicket();
             var ticket = issue(account, limo, defaultExpire);
             ticket.setReservation(reservation);
             reservation.setLimo(limo);
