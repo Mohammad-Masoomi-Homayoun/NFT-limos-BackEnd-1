@@ -18,6 +18,7 @@ public class Reservation {
     private Long id;
 
     @ManyToOne(optional = false)
+    @JoinColumn(name = "_account")
     private Account account;
 
     @ManyToOne

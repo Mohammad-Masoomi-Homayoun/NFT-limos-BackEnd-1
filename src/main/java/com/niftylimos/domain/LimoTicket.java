@@ -17,6 +17,7 @@ public class LimoTicket {
     private Reservation reservation;
 
     @ManyToOne
+    @JoinColumn(name = "_account")
     private Account account;
 
     @ManyToOne(optional = false)
