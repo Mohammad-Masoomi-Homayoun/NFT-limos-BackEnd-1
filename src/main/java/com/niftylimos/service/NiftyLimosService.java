@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.web3j.abi.TypeEncoder;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.generated.Uint256;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 @Service
+@Transactional
 public class NiftyLimosService {
 
     private static final Logger logger = LoggerFactory.getLogger(NiftyLimosService.class);
