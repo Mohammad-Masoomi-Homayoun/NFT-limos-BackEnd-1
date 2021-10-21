@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
@@ -19,7 +20,9 @@ public class LimoAttr {
     private Long id;
 
     @Enumerated
+    @Column(name = "_type")
     private LimoAttrType type;
 
+    @Column(name = "_value")
     private String value;
 }

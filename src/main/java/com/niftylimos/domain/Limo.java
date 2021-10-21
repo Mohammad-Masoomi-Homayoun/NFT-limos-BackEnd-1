@@ -18,9 +18,11 @@ public class Limo {
     @Id
     private Long id;
 
+    @Column(name = "_status")
     private String status;
 
     @OneToOne(mappedBy = "limo", fetch = FetchType.EAGER)
+    @Column(name = "_data")
     private LimoData data;
 
     @OneToMany(mappedBy = "limo", fetch = FetchType.EAGER)

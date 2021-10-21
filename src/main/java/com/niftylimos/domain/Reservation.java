@@ -18,9 +18,11 @@ public class Reservation {
     private Long id;
 
     @ManyToOne(optional = false)
+    @Column(name = "_account")
     private Account account;
 
     @ManyToOne
+    @Column(name = "_limo")
     private Limo limo;
 
     @OneToMany(mappedBy = "reservation", fetch = FetchType.EAGER)
