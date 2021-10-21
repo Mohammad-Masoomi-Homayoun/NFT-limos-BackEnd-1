@@ -95,7 +95,7 @@ public class ReservationTrackerService {
         this.restTemplate = new RestTemplate();
 
         NiftyLimosState blockState = stateService.get("reservation.tracker.block");
-        if (blockState.getValue() == null) {
+        if (blockState.getNiftyLimosValue() == null) {
             this.block = 0L;
         }
 

@@ -12,12 +12,12 @@ import javax.persistence.Id;
 public class NiftyLimosState {
 
     @Id
-    private String key;
+    private String niftyLimosKey;
 
-    private String value;
+    private String niftyLimosValue;
 
     public NiftyLimosState(String key, String value){
-        this.key = key;
-        this.value = value;
+        this.niftyLimosKey = key;
+        this.niftyLimosValue = value;
     }
 }

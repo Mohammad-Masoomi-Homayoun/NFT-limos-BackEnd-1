@@ -22,7 +22,7 @@ public class NiftyLimosStateService {
 
     NiftyLimosState set(String key, String value) {
         var entry = repository.findById(key).orElse(repository.save(new NiftyLimosState(key, value)));
-        entry.setValue(value);
+        entry.setNiftyLimosValue(value);
         return repository.save(entry);
     }
 }
