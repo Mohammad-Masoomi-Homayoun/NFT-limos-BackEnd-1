@@ -3,8 +3,10 @@ package com.niftylimos.service;
 import com.niftylimos.domain.NiftyLimosState;
 import com.niftylimos.repo.NiftyLimosStateRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class NiftyLimosStateService {
 
     private final NiftyLimosStateRepository repository;
