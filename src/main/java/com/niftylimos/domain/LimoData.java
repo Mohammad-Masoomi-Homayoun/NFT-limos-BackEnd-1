@@ -20,7 +20,6 @@ public class LimoData {
     private Long id;
 
     @OneToOne
-    @Column(name = "_limo")
     private Limo limo;
 
     @Column(name = "_image")
