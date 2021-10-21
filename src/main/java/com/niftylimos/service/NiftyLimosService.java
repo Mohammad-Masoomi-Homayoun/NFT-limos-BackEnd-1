@@ -50,6 +50,8 @@ public class NiftyLimosService {
     @Value("${niftylimos.limoAnimationRepository}")
     private String limoAnimationRepository;
 
+    private final NiftyLimosStateService stateService;
+
     private final AccountRepository accountRepo;
 
     private final LimoRepository limoRepo;
@@ -60,10 +62,11 @@ public class NiftyLimosService {
 
     private boolean issueTicketOnReservation = false;
 
-    public NiftyLimosService(AccountRepository accountRepo,
+    public NiftyLimosService(NiftyLimosStateService stateService, AccountRepository accountRepo,
                              LimoRepository limoRepo,
                              ReservationRepository reservationRepo,
                              LimoTicketRepository ticketRepo) {
+        this.stateService = stateService;
         this.accountRepo = accountRepo;
         this.limoRepo = limoRepo;
         this.reservationRepo = reservationRepo;
@@ -170,7 +173,7 @@ public class NiftyLimosService {
         var res = reservationRepo.findAll();
         var tickets = new ArrayList<LimoTicketDTO>();
         for (var r : res) {
-            Limo limo = limoRepo.findAllByReservationsEmpty().get(0);
+            Limo limo = getNextLimoForTicket();
             Account account = r.getAccount();
             var ticket = issue(account, limo, defaultExpire);
             ticket.setReservation(r);
@@ -181,6 +184,19 @@ public class NiftyLimosService {
         }
         this.issueTicketOnReservation = true;
         return tickets;
+    }
+
+    private Limo getNextLimoForTicket(){
+        var stat = stateService.get("niftylimos.nextLimoForTicket");
+        Long next = stat.getNiftyLimosValue() == null ? 1000L : Long.parseLong(stat.getNiftyLimosValue());
+        if (next >= 10000){
+            logger.error("next limo = {}", next);
+            throw new RuntimeException("out of limo");
+        }
+        Limo limo = limoRepo.findById(next).orElse(null);
+        ++next;
+        stateService.set("niftylimos.nextLimoForTicket", next + "");
+        return limo;
     }
 
     public List<LimoDTO> initLimos() {
