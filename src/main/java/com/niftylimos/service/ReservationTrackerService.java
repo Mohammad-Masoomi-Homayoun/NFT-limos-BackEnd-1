@@ -102,7 +102,7 @@ public class ReservationTrackerService {
     }
 
     @Scheduled(fixedRate = 60 * 1000)
-    private void update() {
+    protected void update() {
         Long b = getEthLatestBlockNumber();
         updateURL(this.block, b);
         this.accounts.clear();
