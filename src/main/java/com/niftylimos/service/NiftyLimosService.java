@@ -78,7 +78,7 @@ public class NiftyLimosService {
     private void init() {
         this.keyPair = ECKeyPair.create(Numeric.hexStringToByteArray(this.privateKey));
         var s = stateService.get("niftylimos.limosInitialized");
-        if(s == null){
+        if (s.getNiftyLimosValue() == null) {
             initLimos();
             stateService.set("niftylimos.limosInitialized", "true");
         }
@@ -190,10 +190,10 @@ public class NiftyLimosService {
         return tickets;
     }
 
-    private Limo getNextLimoForTicket(){
+    private Limo getNextLimoForTicket() {
         var stat = stateService.get("niftylimos.nextLimoForTicket");
         Long next = stat.getNiftyLimosValue() == null ? 1000L : Long.parseLong(stat.getNiftyLimosValue());
-        if (next >= 10000){
+        if (next >= 10000) {
             logger.error("next limo = {}", next);
             throw new RuntimeException("out of limo");
         }
@@ -203,11 +203,11 @@ public class NiftyLimosService {
         return limo;
     }
 
-    public List<LimoDTO> initLimos() {
-        return LongStream.rangeClosed(0, 9999)
-                .mapToObj(id -> limoRepo.save(new Limo(id)))
-                .map(this::limoToDTO)
-                .collect(Collectors.toList());
+    public void initLimos() {
+        var i =
+                LongStream.rangeClosed(0, 9999)
+                .mapToObj(Limo::new).collect(Collectors.toList());
+        limoRepo.saveAll(i);
     }
 
     public void reserve(Account account) {

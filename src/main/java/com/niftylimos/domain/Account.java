@@ -16,13 +16,15 @@ public class Account {
     @Column(name = "id")
     private String address;
 
-    @OneToMany(mappedBy = "account", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
     private Set<Reservation> reservations = new HashSet<>();
 
-    @OneToMany(mappedBy = "account", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
     private Set<LimoTicket> tickets = new HashSet<>();
 
     public Account(String address){
         this.address = address;
     }
+
+
 }

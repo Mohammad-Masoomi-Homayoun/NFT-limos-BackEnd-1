@@ -24,7 +24,7 @@ public class LimoData {
     @Column(name = "image")
     private String image;
 
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.LAZY)
     private Set<LimoAttr> attributes = new HashSet<>();
 
 }

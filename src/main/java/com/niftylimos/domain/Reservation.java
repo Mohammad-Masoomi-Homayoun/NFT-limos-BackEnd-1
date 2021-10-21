@@ -23,7 +23,7 @@ public class Reservation {
     @ManyToOne
     private Limo limo;
 
-    @OneToMany(mappedBy = "reservation", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "reservation", fetch = FetchType.LAZY)
     private Set<LimoTicket> tickets = new HashSet<>();
 
     public Reservation(Account account){
