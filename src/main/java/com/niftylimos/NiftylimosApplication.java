@@ -15,8 +15,6 @@ public class NiftylimosApplication implements CommandLineRunner {
     }
 
 
-    @Autowired
-    private NiftyLimosService appService;
 
     @Override
     public void run(String... args) throws Exception {
