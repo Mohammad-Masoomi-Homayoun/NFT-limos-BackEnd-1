@@ -14,15 +14,12 @@ public class LimoTicket {
     private Long id;
 
     @ManyToOne
-    @Column(name = "_reservation")
     private Reservation reservation;
 
     @ManyToOne
-    @Column(name = "_account")
     private Account account;
 
     @ManyToOne(optional = false)
-    @Column(name = "_limo")
     private Limo limo;
 
     @Column(name ="_expire", nullable = false)
