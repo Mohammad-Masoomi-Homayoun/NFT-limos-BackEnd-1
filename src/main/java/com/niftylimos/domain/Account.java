@@ -15,7 +15,7 @@ import java.util.Set;
 @Table(name = "accounts")
 public class Account {
     @Id
-    @Column(name = "_address")
+    @Column(name = "id")
     private String address;
 
     @OneToMany(mappedBy = "account", fetch = FetchType.EAGER)

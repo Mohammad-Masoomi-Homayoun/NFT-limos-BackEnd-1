@@ -19,7 +19,7 @@ public class Limo {
     @Id
     private Long id;
 
-    @Column(name = "_status")
+    @Column(name = "state")
     private String status;
 
     @OneToOne(mappedBy = "limo", fetch = FetchType.EAGER)

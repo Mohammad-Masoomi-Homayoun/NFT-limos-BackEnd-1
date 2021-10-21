@@ -12,13 +12,14 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @Entity
+@Table(name = "reservations")
 public class Reservation {
     @Id
     @GeneratedValue
     private Long id;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "_account")
+    @JoinColumn(name = "account_id")
     private Account account;
 
     @ManyToOne

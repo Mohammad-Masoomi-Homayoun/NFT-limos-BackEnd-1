@@ -8,6 +8,7 @@ import javax.persistence.*;
 @Data
 @NoArgsConstructor
 @Entity
+@Table(name = "limo_tickets")
 public class LimoTicket {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)

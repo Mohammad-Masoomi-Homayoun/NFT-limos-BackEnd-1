@@ -14,6 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Table(name = "limo_data")
 public class LimoData {
 
     @Id
@@ -22,7 +23,7 @@ public class LimoData {
     @OneToOne
     private Limo limo;
 
-    @Column(name = "_image")
+    @Column(name = "image")
     private String image;
 
     @OneToMany(fetch = FetchType.EAGER)
