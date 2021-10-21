@@ -6,7 +6,9 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -25,7 +27,7 @@ public class Limo {
     private List<Reservation> reservations = new ArrayList<>();
 
     @OneToMany(mappedBy = "limo", fetch = FetchType.EAGER)
-    private List<LimoTicket> tickets = new ArrayList<>();
+    private Set<LimoTicket> tickets = new HashSet<>();
 
 
     public Limo(Long tokenId) {
