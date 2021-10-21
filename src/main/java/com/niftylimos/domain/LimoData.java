@@ -6,7 +6,9 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -23,6 +25,6 @@ public class LimoData {
     private String image;
 
     @OneToMany(fetch = FetchType.EAGER)
-    private List<LimoAttr> attributes = new ArrayList<>();
+    private Set<LimoAttr> attributes = new HashSet<>();
 
 }

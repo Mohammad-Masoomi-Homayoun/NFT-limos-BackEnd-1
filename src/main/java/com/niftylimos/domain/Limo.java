@@ -24,7 +24,7 @@ public class Limo {
     private LimoData data;
 
     @OneToMany(mappedBy = "limo", fetch = FetchType.EAGER)
-    private List<Reservation> reservations = new ArrayList<>();
+    private Set<Reservation> reservations = new HashSet<>();
 
     @OneToMany(mappedBy = "limo", fetch = FetchType.EAGER)
     private Set<LimoTicket> tickets = new HashSet<>();

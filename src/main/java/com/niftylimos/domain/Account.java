@@ -8,7 +8,9 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -18,10 +20,10 @@ public class Account {
     private String address;
 
     @OneToMany(mappedBy = "account", fetch = FetchType.EAGER)
-    private List<Reservation> reservations = new ArrayList<>();
+    private Set<Reservation> reservations = new HashSet<>();
 
     @OneToMany(mappedBy = "account", fetch = FetchType.EAGER)
-    private List<LimoTicket> tickets = new ArrayList<>();
+    private Set<LimoTicket> tickets = new HashSet<>();
 
     public Account(String address){
         this.address = address;
