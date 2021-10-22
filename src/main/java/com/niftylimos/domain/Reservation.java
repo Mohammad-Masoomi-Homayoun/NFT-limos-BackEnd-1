@@ -16,6 +16,9 @@ public class Reservation {
     @GeneratedValue
     private Long id;
 
+    @Column(unique = true)
+    private String tx;
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "account_id")
     private Account account;

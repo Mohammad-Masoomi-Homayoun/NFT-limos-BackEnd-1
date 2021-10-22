@@ -16,13 +16,14 @@ public class NiftyLimosStateService {
         this.repository = repository;
     }
 
-    NiftyLimosState get(String key) {
-        return repository.findById(key).orElse(repository.save(new NiftyLimosState(key, null)));
+    String get(String key) {
+        return repository.findById(key).map(NiftyLimosState::getNiftyLimosValue).orElse(null);
     }
 
-    NiftyLimosState set(String key, String value) {
+    void set(String key, String value) {
         var entry = repository.findById(key).orElse(repository.save(new NiftyLimosState(key, value)));
         entry.setNiftyLimosValue(value);
-        return repository.save(entry);
+        repository.save(entry);
+        repository.flush();
     }
 }

@@ -77,8 +77,7 @@ public class NiftyLimosService {
     @PostConstruct
     private void init() {
         this.keyPair = ECKeyPair.create(Numeric.hexStringToByteArray(this.privateKey));
-        var s = stateService.get("niftylimos.limosInitialized");
-        if (s.getNiftyLimosValue() == null) {
+        if (stateService.get("niftylimos.limosInitialized") == null) {
             initLimos();
             stateService.set("niftylimos.limosInitialized", "true");
         }
@@ -161,9 +160,13 @@ public class NiftyLimosService {
         ticket.setAccount(account);
         ticket.setExpire(expire);
         ticket.setLimo(limo);
-        ticket.setV(Numeric.toHexString(sig.getV()));
-        ticket.setR(Numeric.toHexString(sig.getR()));
-        ticket.setS(Numeric.toHexString(sig.getS()));
+        byte[] signature = new byte[65];
+        for (int i = 0; i < 32; i++) {
+            signature[i] = sig.getR()[i];
+            signature[i + 32] = sig.getS()[i];
+        }
+        signature[64] = sig.getV()[0];
+        ticket.setSignature(Numeric.toHexString(signature));
         return ticketRepo.save(ticket);
     }
 
@@ -191,8 +194,7 @@ public class NiftyLimosService {
     }
 
     private Limo getNextLimoForTicket() {
-        var stat = stateService.get("niftylimos.nextLimoForTicket");
-        Long next = stat.getNiftyLimosValue() == null ? 1000L : Long.parseLong(stat.getNiftyLimosValue());
+        Long next = stateService.get("niftylimos.nextLimoForTicket") == null ? 1000L : Long.parseLong(stateService.get("niftylimos.nextLimoForTicket"));
         if (next >= 10000) {
             logger.error("next limo = {}", next);
             throw new RuntimeException("out of limo");
@@ -210,8 +212,9 @@ public class NiftyLimosService {
         limoRepo.saveAll(i);
     }
 
-    public void reserve(Account account) {
+    public void reserve(Account account, String tx) {
         Reservation reservation = new Reservation(account);
+        reservation.setTx(tx);
         reservation = reservationRepo.save(reservation);
         if (this.issueTicketOnReservation) {
             Limo limo = getNextLimoForTicket();
@@ -277,9 +280,7 @@ public class NiftyLimosService {
         dto.setId(ticket.getId());
         dto.setLimo(ticket.getLimo().getId());
         dto.setExpire(ticket.getExpire());
-        dto.setV(ticket.getV());
-        dto.setR(ticket.getR());
-        dto.setS(ticket.getS());
+        dto.setSignature(ticket.getSignature());
         if (ticket.getReservation() != null)
             dto.setReservation(ticket.getReservation().getId());
         return dto;

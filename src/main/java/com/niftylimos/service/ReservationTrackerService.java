@@ -94,9 +94,10 @@ public class ReservationTrackerService {
         this.etherscanEndpoint = url;
         this.restTemplate = new RestTemplate();
 
-        NiftyLimosState blockState = stateService.get("reservation.tracker.block");
-        if (blockState.getNiftyLimosValue() == null) {
+        if (stateService.get("reservation.tracker.block") == null) {
             this.block = 0L;
+        }else {
+            this.block = Long.parseLong(stateService.get("reservation.tracker.block"));
         }
 
     }
@@ -133,16 +134,16 @@ public class ReservationTrackerService {
             if (!this.accounts.containsKey(acc)) {
                 this.accounts.put(acc, 0);
             }
+            Account account = service.getOrCreateAccount(acc);
+
+            int count = new BigDecimal(tx.get("value")).divide(PRICE).intValue();
+            for (int i = 0; i < count; i++) {
+                service.reserve(account, tx.get("hash") + "_" + i);
+            }
             this.accounts.put(acc, this.accounts.get(acc) + new BigDecimal(tx.get("value")).divide(PRICE).intValue());
         }
         this.numReserved = this.accounts.values().stream().mapToInt(integer -> integer).sum();
 
-        accounts.forEach((key, value) -> {
-            Account account = service.getOrCreateAccount(key);
-            for (int i = 0; i < value; ++i) {
-                service.reserve(account);
-            }
-        });
         updated(b);
         logger.info("reserve status updated");
     }

@@ -12,8 +12,6 @@ public class LimoTicketDTO {
     private Long reservation;
     private String account;
     private Long limo;
-    private String v;
-    private String r;
-    private String s;
+    private String signature;
     private Long expire;
 }
