@@ -37,17 +37,18 @@ public class NiftyLimosService {
 
     private static final Logger logger = LoggerFactory.getLogger(NiftyLimosService.class);
 
-    private Long defaultExpire = 1000000L;
+    @Value("${NL.ticket-expire}")
+    private Long ticketExpire;
 
-    @Value("${niftylimos.ticket.privateKey}")
+    @Value("${NL.ticket-privateKey}")
     private String privateKey;
 
     private ECKeyPair keyPair;
 
-    @Value("${niftylimos.limoImageRepository}")
+    @Value("${NL.limo-image-repository}")
     private String limoImageRepository;
 
-    @Value("${niftylimos.limoAnimationRepository}")
+    @Value("${NL.limo-animation-repository}")
     private String limoAnimationRepository;
 
     private final NiftyLimosStateService stateService;
@@ -60,7 +61,10 @@ public class NiftyLimosService {
 
     private final LimoTicketRepository ticketRepo;
 
-    private boolean issueTicketOnReservation = false;
+    @Value("${NL.issue-ticket-on-reservation}")
+    private boolean issueTicketOnReservationDefault;
+
+    private boolean issueTicketOnReservation;
 
     public NiftyLimosService(NiftyLimosStateService stateService, AccountRepository accountRepo,
                              LimoRepository limoRepo,
@@ -77,16 +81,29 @@ public class NiftyLimosService {
     @PostConstruct
     private void init() {
         this.keyPair = ECKeyPair.create(Numeric.hexStringToByteArray(this.privateKey));
-        if (stateService.get("niftylimos.limosInitialized") == null) {
+        if (stateService.get("limosInitialized").isEmpty()) {
+            logger.info("initializing Limos...");
             initLimos();
-            stateService.set("niftylimos.limosInitialized", "true");
+            logger.info("Limos initialized.");
+            stateService.set("limosInitialized", "true");
         }
+        if(stateService.get("issue-ticket-on-reservation").isEmpty()){
+            this.issueTicketOnReservation = issueTicketOnReservationDefault;
+        }else {
+            this.issueTicketOnReservation = Boolean.parseBoolean(stateService.get("issue-ticket-on-reservation").get());
+        }
+        if(stateService.get("ticket-expire").isPresent()){
+            this.ticketExpire = Long.parseLong(stateService.get("ticket-expire").get());
+        }
+        logger.info("issue ticket on reservation = {}", this.issueTicketOnReservation);
+        logger.info("ticket expire = {}", this.ticketExpire);
         logger.info("initialized");
     }
 
     public Long setExpire(Long newExpire) {
-        this.defaultExpire = newExpire;
-        return this.defaultExpire;
+        this.ticketExpire = newExpire;
+        stateService.set("ticket-expire", String.valueOf(newExpire));
+        return this.ticketExpire;
     }
 
     public Account getOrCreateAccount(String address) {
@@ -182,7 +199,7 @@ public class NiftyLimosService {
         for (var r : res) {
             Limo limo = getNextLimoForTicket();
             Account account = r.getAccount();
-            var ticket = issue(account, limo, defaultExpire);
+            var ticket = issue(account, limo, ticketExpire);
             ticket.setReservation(r);
             ticketRepo.save(ticket);
             r.setLimo(limo);
@@ -194,14 +211,14 @@ public class NiftyLimosService {
     }
 
     private Limo getNextLimoForTicket() {
-        Long next = stateService.get("niftylimos.nextLimoForTicket") == null ? 1000L : Long.parseLong(stateService.get("niftylimos.nextLimoForTicket"));
+        Long next = stateService.get("nextLimoForTicket").isEmpty()? 1000L : Long.parseLong(stateService.get("nextLimoForTicket").get());
         if (next >= 10000) {
             logger.error("next limo = {}", next);
             throw new RuntimeException("out of limo");
         }
-        Limo limo = limoRepo.findById(next).orElse(null);
+        Limo limo = limoRepo.findById(next).orElseThrow();
         ++next;
-        stateService.set("niftylimos.nextLimoForTicket", next + "");
+        stateService.set("nextLimoForTicket", next + "");
         return limo;
     }
 
@@ -212,13 +229,14 @@ public class NiftyLimosService {
         limoRepo.saveAll(i);
     }
 
-    public void reserve(Account account, String tx) {
+    public void reserve(String acc, String tx) {
+        Account account = getOrCreateAccount(acc);
         Reservation reservation = new Reservation(account);
         reservation.setTx(tx);
         reservation = reservationRepo.save(reservation);
         if (this.issueTicketOnReservation) {
             Limo limo = getNextLimoForTicket();
-            var ticket = issue(account, limo, defaultExpire);
+            var ticket = issue(account, limo, ticketExpire);
             ticket.setReservation(reservation);
             reservation.setLimo(limo);
             ticketRepo.save(ticket);

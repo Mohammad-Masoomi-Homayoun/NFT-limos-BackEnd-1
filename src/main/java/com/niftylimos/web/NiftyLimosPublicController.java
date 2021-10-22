@@ -37,6 +37,7 @@ public class NiftyLimosPublicController {
         return service.getReservationCount();
     }
 
+
     @RequestMapping(value = "/limo/{id}")
     public LimoMetadataDTO getLimo(@PathVariable Long id) {
         return service.getLimoMetadata(id);

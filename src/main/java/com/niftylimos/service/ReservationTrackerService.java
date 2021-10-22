@@ -1,7 +1,5 @@
 package com.niftylimos.service;
 
-import com.niftylimos.domain.Account;
-import com.niftylimos.domain.NiftyLimosState;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,10 +14,11 @@ import org.web3j.utils.Convert;
 import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,38 +31,46 @@ public class ReservationTrackerService {
 
     private final NiftyLimosService service;
 
+    @Value("${NL.etherscan-base}")
+    private String etherscanBase;
 
-    private static final BigDecimal PRICE = Convert.toWei("0.08", Convert.Unit.ETHER);
+    @Value("${NL.reserve-price}")
+    private String priceString;
 
-    private Long block = 0L;
+    private BigDecimal price;
 
+    private AtomicLong newReservations = new AtomicLong(0L);
 
-//    @Value("${niftylimos.web3Endpoint}")
-//    private String web3Endpoint;
+    private LocalDateTime lastCheckedTimestamp = LocalDateTime.now();
 
-    @Value("${niftylimos.etherscan.apikey}")
-    private String apikey;
+    @Value("${NL.etherscan-apikey}")
+    private String etherscanAPIkey;
 
-    @Value("${niftylimos.account}")
-    private String account;
+    @Value("${NL.reserve-account}")
+    private String reservationAccount;
 
     private RestTemplate restTemplate;
-
-    private String etherscanEndpoint;
-
-    private Map<String, Integer> accounts = new HashMap<>();
-
-    private int numReserved = 0;
 
     public ReservationTrackerService(NiftyLimosStateService stateService, NiftyLimosService service) {
         this.stateService = stateService;
         this.service = service;
     }
 
+    @PostConstruct
+    private void init() {
+        logger.info("account = {}", reservationAccount);
+        this.price = Convert.toWei(priceString, Convert.Unit.ETHER);
+        logger.info("price  = {} ETH", this.priceString);
+        this.restTemplate = new RestTemplate();
+        logger.info("last scanned block : {}", getPreviousBlock());
+        logger.info("using ethereum network : {}", etherscanBase);
+        lastCheckedTimestamp = LocalDateTime.now();
+        update();
+    }
 
-    private void updateURL(Long startBlock, Long endBlock) {
+    private String makeEtherscanURL(Long startBlock, Long endBlock) {
         String url =
-                "https://api-ropsten.etherscan.io/api?" +
+                "%s/api?" +
                         "module=account&" +
                         "action=txlist&" +
                         "address=%s&" +
@@ -73,43 +80,27 @@ public class ReservationTrackerService {
                         "offset=10000&" +
                         "sort=asc&" +
                         "apikey=%s";
-        url = String.format(url, this.account, startBlock, endBlock, this.apikey);
-        this.etherscanEndpoint = url;
+        return String.format(url, etherscanBase, this.reservationAccount, startBlock, endBlock, this.etherscanAPIkey);
     }
 
-    @PostConstruct
-    private void init() {
-        String url =
-                "https://api-ropsten.etherscan.io/api?" +
-                        "module=account&" +
-                        "action=txlist&" +
-                        "address=%s&" +
-                        "startblock=0&" +
-                        "endblock=99999999&" +
-                        "page=1&" +
-                        "offset=10000&" +
-                        "sort=asc&" +
-                        "apikey=%s";
-        url = String.format(url, this.account, this.apikey);
-        this.etherscanEndpoint = url;
-        this.restTemplate = new RestTemplate();
+    private Long getPreviousBlock(){
+        return Long.parseLong(stateService.get("reservation-tracker-block").orElse("0"));
+    }
 
-        if (stateService.get("reservation.tracker.block") == null) {
-            this.block = 0L;
-        }else {
-            this.block = Long.parseLong(stateService.get("reservation.tracker.block"));
-        }
-
+    @Scheduled(fixedRate = 60 * 60 * 1000)
+    protected void report() {
+        logger.info("new reservations found from {} = {}", lastCheckedTimestamp, newReservations);
+        lastCheckedTimestamp = LocalDateTime.now();
+        newReservations = new AtomicLong(0);
     }
 
     @Scheduled(fixedRate = 60 * 1000)
     protected void update() {
-        Long b = getEthLatestBlockNumber();
-        updateURL(this.block, b);
-        this.accounts.clear();
-        this.numReserved = 0;
+        boolean needReport = false;
+        Long latestBlock = getEthLatestBlockNumber();
+        String url = makeEtherscanURL(getPreviousBlock() + 1, latestBlock);
         EtherScanResult result =
-                this.restTemplate.postForObject(this.etherscanEndpoint, "", EtherScanResult.class);
+                this.restTemplate.postForObject(url, "", EtherScanResult.class);
         if (result == null) {
             throw new RuntimeException("result is null");
         }
@@ -118,54 +109,47 @@ public class ReservationTrackerService {
             txs = new ArrayList<>();
         }
         List<Map<String, String>> valid_txs = txs.stream()
-                .filter(tx -> tx.get("to").equalsIgnoreCase(this.account))
+
+                //incoming tx
+                .filter(tx -> tx.get("to").equalsIgnoreCase(this.reservationAccount))
+
+                //value
                 .filter(tx -> {
-                            BigDecimal[] n = new BigDecimal(tx.get("value")).divideAndRemainder(PRICE);
+                            BigDecimal[] n = new BigDecimal(tx.get("value")).divideAndRemainder(price);
                             //expect minimum n[0] == 1, and n[1] == 0
                             return n[0].compareTo(BigDecimal.ZERO) != 0 && n[1].compareTo(BigDecimal.ZERO) == 0;
                         }
                 )
+
                 //exclude refunded tx
                 .filter(tx -> !tx.get("hash").equalsIgnoreCase("0x02c503cb094bb2d345f6c3ec4504892879434002066b1347af856b555ef87205"))
+
                 .collect(Collectors.toList());
 
         for (Map<String, String> tx : valid_txs) {
             String acc = tx.get("from").toLowerCase();
-            if (!this.accounts.containsKey(acc)) {
-                this.accounts.put(acc, 0);
-            }
-            Account account = service.getOrCreateAccount(acc);
-
-            int count = new BigDecimal(tx.get("value")).divide(PRICE).intValue();
+            int count = new BigDecimal(tx.get("value")).divide(price).intValue();
             for (int i = 0; i < count; i++) {
-                service.reserve(account, tx.get("hash") + "_" + i);
+                needReport = true;
+                service.reserve(acc, tx.get("hash") + "_" + i);
+                newReservations.incrementAndGet();
             }
-            this.accounts.put(acc, this.accounts.get(acc) + new BigDecimal(tx.get("value")).divide(PRICE).intValue());
         }
-        this.numReserved = this.accounts.values().stream().mapToInt(integer -> integer).sum();
-
-        updated(b);
-        logger.info("reserve status updated");
+        updated(latestBlock);
+        if (needReport) {
+            report();
+        }
     }
 
-    private void updated(Long b) {
-        stateService.set("reservation.tracker.block", b.toString());
-        this.block = b;
+    private void updated(Long block) {
+        stateService.set("reservation-tracker-block", block.toString());
     }
 
     private Long getEthLatestBlockNumber() {
-        String url = "https://api-ropsten.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=1M5FNB617T3228CQ3R4SIT8SF5QNX6JS8V";
-        Map result = restTemplate.postForObject(url, "", Map.class);
-        return Long.decode((String) result.get("result"));
-    }
-
-    public int getNumTotalReserved() {
-        return this.numReserved;
-    }
-
-    public int getNumAccountReserved(String account) {
-        account = account.toLowerCase();
-        return accounts.getOrDefault(account, 0);
+        String url = String.format("%s/api?module=proxy&action=eth_blockNumber&apikey=%s", etherscanBase, etherscanAPIkey);
+        Map response = restTemplate.postForObject(url, "", Map.class);
+        String result = (String) response.get("result");
+        return Long.decode(result);
     }
 
     @Data
