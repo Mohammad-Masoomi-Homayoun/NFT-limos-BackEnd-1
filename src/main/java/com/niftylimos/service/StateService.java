@@ -9,11 +9,11 @@ import java.util.Optional;
 
 @Service
 @Transactional
-public class NiftyLimosStateService {
+public class StateService {
 
     private final NiftyLimosStateRepository repository;
 
-    public NiftyLimosStateService(NiftyLimosStateRepository repository) {
+    public StateService(NiftyLimosStateRepository repository) {
         this.repository = repository;
     }
 

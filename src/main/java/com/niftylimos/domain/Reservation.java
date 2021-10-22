@@ -1,17 +1,21 @@
 package com.niftylimos.domain;
 
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @Entity
 @Table(name = "reservations")
 public class Reservation {
+
     @Id
     @GeneratedValue
     private Long id;
@@ -32,4 +36,5 @@ public class Reservation {
     public Reservation(Account account){
         this.account = account;
     }
+
 }

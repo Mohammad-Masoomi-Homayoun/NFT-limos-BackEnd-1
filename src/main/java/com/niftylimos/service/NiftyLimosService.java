@@ -8,6 +8,7 @@ import com.niftylimos.repo.AccountRepository;
 import com.niftylimos.repo.LimoRepository;
 import com.niftylimos.repo.LimoTicketRepository;
 import com.niftylimos.repo.ReservationRepository;
+import com.niftylimos.service.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,7 +52,7 @@ public class NiftyLimosService {
     @Value("${NL.limo-animation-repository}")
     private String limoAnimationRepository;
 
-    private final NiftyLimosStateService stateService;
+    private final StateService stateService;
 
     private final AccountRepository accountRepo;
 
@@ -66,7 +67,7 @@ public class NiftyLimosService {
 
     private boolean issueTicketOnReservation;
 
-    public NiftyLimosService(NiftyLimosStateService stateService, AccountRepository accountRepo,
+    public NiftyLimosService(StateService stateService, AccountRepository accountRepo,
                              LimoRepository limoRepo,
                              ReservationRepository reservationRepo,
                              LimoTicketRepository ticketRepo) {
@@ -211,7 +212,7 @@ public class NiftyLimosService {
     }
 
     private Limo getNextLimoForTicket() {
-        Long next = stateService.get("nextLimoForTicket").isEmpty()? 1000L : Long.parseLong(stateService.get("nextLimoForTicket").get());
+        Long next = Long.parseLong(stateService.get("nextLimoForTicket").orElse("1000"));
         if (next >= 10000) {
             logger.error("next limo = {}", next);
             throw new RuntimeException("out of limo");

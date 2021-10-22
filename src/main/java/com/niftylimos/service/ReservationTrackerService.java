@@ -27,7 +27,7 @@ public class ReservationTrackerService {
 
     private static final Logger logger = LoggerFactory.getLogger(ReservationTrackerService.class);
 
-    private final NiftyLimosStateService stateService;
+    private final StateService stateService;
 
     private final NiftyLimosService service;
 
@@ -51,7 +51,7 @@ public class ReservationTrackerService {
 
     private RestTemplate restTemplate;
 
-    public ReservationTrackerService(NiftyLimosStateService stateService, NiftyLimosService service) {
+    public ReservationTrackerService(StateService stateService, NiftyLimosService service) {
         this.stateService = stateService;
         this.service = service;
     }

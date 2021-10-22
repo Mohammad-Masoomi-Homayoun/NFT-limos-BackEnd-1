@@ -1,7 +1,7 @@
 package com.niftylimos.web;
 
-import com.niftylimos.service.AccountDTO;
-import com.niftylimos.service.LimoMetadataDTO;
+import com.niftylimos.service.dto.AccountDTO;
+import com.niftylimos.service.dto.LimoMetadataDTO;
 import com.niftylimos.service.NiftyLimosService;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
