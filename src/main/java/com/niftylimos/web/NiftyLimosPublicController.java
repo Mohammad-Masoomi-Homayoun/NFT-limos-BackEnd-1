@@ -77,7 +77,7 @@ public class NiftyLimosPublicController {
     public void getAnimation(@PathVariable("id") String id, HttpServletResponse response) {
         try {
             response.setHeader("Content-disposition", "attachment; filename=" + id);
-            response.setContentType("video/mp4");
+            response.setContentType("video/webm");
             InputStream in = new ByteArrayInputStream(service.getLimoAnimation(id));
             IOUtils.copy(in, response.getOutputStream());
             response.flushBuffer();
