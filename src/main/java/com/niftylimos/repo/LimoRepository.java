@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface LimoRepository extends JpaRepository<Limo, Long> {
-    List<Limo> findAllByReservationsEmpty();
+    List<Limo> findAllByTicketsEmptyAndIdGreaterThanEqualOrderByIdAsc(Long offset);
 }

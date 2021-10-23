@@ -14,7 +14,7 @@ import javax.persistence.*;
 @Table(name = "limo_tickets")
 public class LimoTicket {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "TICKET_SEQ")
     private Long id;
 
     @ManyToOne

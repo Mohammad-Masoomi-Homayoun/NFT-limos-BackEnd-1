@@ -218,6 +218,7 @@ public class NiftyLimosService {
         }
         signature[64] = sig.getV()[0];
         ticket.setSignature(Numeric.toHexString(signature));
+        logger.info("issued : [{}, {}, {}]", account.getAddress(), limo.getId(), expire);
         return ticketRepo.save(ticket);
     }
 
@@ -228,7 +229,7 @@ public class NiftyLimosService {
     }
 
     public List<LimoTicketDTO> issueTicketForAllReservations() {
-        var res = reservationRepo.findAll();
+        var res = reservationRepo.findAllByTicketsEmptyOrderById();
         var tickets = new ArrayList<LimoTicketDTO>();
         for (var r : res) {
             Limo limo = getNextLimoForTicket();
@@ -238,6 +239,8 @@ public class NiftyLimosService {
             ticketRepo.save(ticket);
             r.setLimo(limo);
             reservationRepo.save(r);
+            ticketRepo.flush();
+            reservationRepo.flush();
             tickets.add(ticketToDTO(ticket));
         }
         this.issueTicketOnReservation = true;
@@ -245,15 +248,13 @@ public class NiftyLimosService {
     }
 
     private Limo getNextLimoForTicket() {
-        Long next = Long.parseLong(stateService.get("nextLimoForTicket").orElse("1000"));
-        if (next >= 10000) {
-            logger.error("next limo = {}", next);
+        List<Limo> limos = limoRepo.findAllByTicketsEmptyAndIdGreaterThanEqualOrderByIdAsc(1000L);
+        logger.info("found {} limos with no tickets issued", limos.size());
+        if (limos.isEmpty()) {
+            logger.error("out of limo");
             throw new RuntimeException("out of limo");
         }
-        Limo limo = limoRepo.findById(next).orElseThrow();
-        ++next;
-        stateService.set("nextLimoForTicket", next + "");
-        return limo;
+        return limos.get(0);
     }
 
     public void initLimos() {

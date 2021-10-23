@@ -17,7 +17,7 @@ import java.util.Set;
 public class Reservation {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "RES_SEQ")
     private Long id;
 
     @Column(unique = true)
