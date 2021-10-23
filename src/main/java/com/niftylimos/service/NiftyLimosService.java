@@ -12,7 +12,11 @@ import com.niftylimos.service.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 import org.web3j.abi.TypeEncoder;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.generated.Uint256;
@@ -26,7 +30,9 @@ import javax.transaction.Transactional;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,6 +43,12 @@ import java.util.stream.LongStream;
 public class NiftyLimosService {
 
     private static final Logger logger = LoggerFactory.getLogger(NiftyLimosService.class);
+
+    @Value("${NL.contract-address}")
+    private String contractAddress;
+
+    @Value("${NL.contract-abi}")
+    private String contractAbi;
 
     @Value("${NL.ticket-expire}")
     private Long ticketExpire;
@@ -81,6 +93,7 @@ public class NiftyLimosService {
 
     @PostConstruct
     private void init() {
+        logger.info("contract address : {}", contractAddress);
         this.keyPair = ECKeyPair.create(Numeric.hexStringToByteArray(this.privateKey));
         if (stateService.get("limosInitialized").isEmpty()) {
             logger.info("initializing Limos...");
@@ -88,17 +101,37 @@ public class NiftyLimosService {
             logger.info("Limos initialized.");
             stateService.set("limosInitialized", "true");
         }
-        if(stateService.get("issue-ticket-on-reservation").isEmpty()){
+        if (stateService.get("issue-ticket-on-reservation").isEmpty()) {
             this.issueTicketOnReservation = issueTicketOnReservationDefault;
-        }else {
+        } else {
             this.issueTicketOnReservation = Boolean.parseBoolean(stateService.get("issue-ticket-on-reservation").get());
         }
-        if(stateService.get("ticket-expire").isPresent()){
+        if (stateService.get("ticket-expire").isPresent()) {
             this.ticketExpire = Long.parseLong(stateService.get("ticket-expire").get());
         }
         logger.info("issue ticket on reservation = {}", this.issueTicketOnReservation);
         logger.info("ticket expire = {}", this.ticketExpire);
         logger.info("initialized");
+    }
+
+
+    public String getContractAddress() {
+        return this.contractAddress;
+    }
+
+    public String getContractAbi() {
+        try {
+            // Jar
+            InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(contractAbi);
+            // IDE
+            if (inputStream == null) {
+                inputStream = this.getClass().getResourceAsStream(contractAbi);
+            }
+            return StreamUtils.copyToString(inputStream, Charset.defaultCharset());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public Long setExpire(Long newExpire) {
@@ -226,7 +259,7 @@ public class NiftyLimosService {
     public void initLimos() {
         var i =
                 LongStream.rangeClosed(0, 9999)
-                .mapToObj(Limo::new).collect(Collectors.toList());
+                        .mapToObj(Limo::new).collect(Collectors.toList());
         limoRepo.saveAll(i);
     }
 

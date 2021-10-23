@@ -1,11 +1,14 @@
 package com.niftylimos.web;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.niftylimos.service.dto.AccountDTO;
 import com.niftylimos.service.dto.LimoMetadataDTO;
 import com.niftylimos.service.NiftyLimosService;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,6 +17,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/")
@@ -25,6 +32,16 @@ public class NiftyLimosPublicController {
 
     public NiftyLimosPublicController(NiftyLimosService service) {
         this.service = service;
+    }
+
+    @RequestMapping(value = "/contract", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Object getContractAddress() throws JsonProcessingException {
+        Map<String, Object> out = new HashMap<>();
+        out.put("address", service.getContractAddress());
+        ObjectMapper mapper = new ObjectMapper();
+        var abi =mapper.readValue(service.getContractAbi(), List.class);
+        out.put("abi", abi);
+        return out;
     }
 
     @RequestMapping(value = "/account/{id}")
