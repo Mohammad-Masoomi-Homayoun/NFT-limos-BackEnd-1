@@ -12,9 +12,6 @@ import com.niftylimos.service.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 import org.web3j.abi.TypeEncoder;
@@ -283,8 +280,9 @@ public class NiftyLimosService {
         LimoMetadataDTO dto = new LimoMetadataDTO();
         dto.setName("Limo #" + id);
         dto.setDescription("Nifty Limos is an Ethereum-based NFT collection of 10K 3D rendered limos that you can race to win eth prizes! By buying a Nifty Limo, you gain access to an exclusive members-only experience, with a stellar community, curated NFT airdrops, and branded merchandise.");
-        dto.setImage("https://niftylimos.com/api/limo/image/before-reveal-limos.jpeg");
-        dto.setAnimation_url("https://niftylimos.com/api/limo/animation/before-reveal-limos.webm");
+//        dto.setImage("https://niftylimos.com/api/limo/image/before-reveal-limos.jpeg");
+        dto.setImage("https://niftylimos.com/api/limo/animation/before-reveal-limos.webm");
+//        dto.setAnimation_url("https://niftylimos.com/api/limo/animation/before-reveal-limos.webm");
         return dto;
     }
 
