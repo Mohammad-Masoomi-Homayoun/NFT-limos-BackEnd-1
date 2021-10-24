@@ -64,7 +64,7 @@ public class NiftyLimosPublicController {
     public void getImg(@PathVariable("id") String id, HttpServletResponse response) {
         try {
             response.setHeader("Content-disposition", "attachment; filename=" + id);
-            response.setContentType("image/jpeg");
+            response.setContentType("image/gif");
             InputStream in = new ByteArrayInputStream(service.getLimoImage(id));
             IOUtils.copy(in, response.getOutputStream());
             response.flushBuffer();
