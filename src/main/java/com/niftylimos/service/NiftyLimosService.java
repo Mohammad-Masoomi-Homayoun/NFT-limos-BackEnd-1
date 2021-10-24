@@ -219,6 +219,13 @@ public class NiftyLimosService {
         return ticketRepo.save(ticket);
     }
 
+    public LimoTicketDTO issueTicket(IssueTicketRequestDTO req) {
+        Account a = accountRepo.findById(req.getAddress().toLowerCase()).orElseThrow();
+        Limo l = req.getLimo() == null ? getNextLimoForTicket() : limoRepo.getById(req.getLimo());
+        Long e = req.getExpire() == null ? ticketExpire : req.getLimo();
+        return ticketToDTO(issue(a, l, e));
+    }
+
     public LimoTicketDTO issueTicket(String address, Long tokenId, Long expire) {
         Account account = accountRepo.findById(address.toLowerCase()).orElseThrow();
         Limo limo = limoRepo.findById(tokenId).orElseThrow();

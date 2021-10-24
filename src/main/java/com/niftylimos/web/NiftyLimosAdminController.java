@@ -1,16 +1,10 @@
 package com.niftylimos.web;
 
 import com.niftylimos.service.*;
-import com.niftylimos.service.dto.AccountDTO;
-import com.niftylimos.service.dto.LimoDTO;
-import com.niftylimos.service.dto.LimoTicketDTO;
-import com.niftylimos.service.dto.ReservationDTO;
+import com.niftylimos.service.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -66,27 +60,18 @@ public class NiftyLimosAdminController {
         return service.getTicket(id);
     }
 
-    @RequestMapping(value = "/issueTicket")
-    public LimoTicketDTO issueTicket(@RequestParam String secret, @RequestParam String address, @RequestParam Long tokenId, @RequestParam Long expire) {
-        checkSecret(secret);
-        return service.issueTicket(address, tokenId, expire);
+    @RequestMapping(value = "/issueTicket", method = RequestMethod.POST)
+    public LimoTicketDTO issueTicket(@RequestBody IssueTicketRequestDTO requestDTO) {
+        return service.issueTicket(requestDTO);
     }
 
     @RequestMapping(value = "/issueTicketAll")
-    public List<LimoTicketDTO> issueTicketForAllReservations(@RequestParam String secret) {
-        checkSecret(secret);
+    public List<LimoTicketDTO> issueTicketForAllReservations() {
         return service.issueTicketForAllReservations();
     }
 
     @RequestMapping(value = "/config")
-    public Long setExpire(@RequestParam String secret, @RequestParam Long newExpire) {
-        checkSecret(secret);
+    public Long setExpire(@RequestParam Long newExpire) {
         return service.setExpire(newExpire);
-    }
-
-    private void checkSecret(String secret){
-        if(!secret.equals("Nas7079")){
-            throw new RuntimeException("Forbidden!");
-        }
     }
 }
