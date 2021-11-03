@@ -277,7 +277,7 @@ public class NiftyLimosService {
     }
 
     public LimoTicketDTO issueTicket(IssueTicketRequestDTO req) {
-        Account a = accountRepo.findById(req.getAddress().toLowerCase()).orElseThrow();
+        Account a = getOrCreateAccount(req.getAddress());
         Limo l = req.getLimo() == null ? getNextLimoForTicket() : limoRepo.getById(req.getLimo());
         Long e = req.getExpire() == null ? ticketExpire : req.getLimo();
         return ticketToDTO(issue(a, l, e));
