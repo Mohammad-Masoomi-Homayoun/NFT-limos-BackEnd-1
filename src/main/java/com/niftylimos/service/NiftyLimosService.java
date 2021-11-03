@@ -108,12 +108,40 @@ public class NiftyLimosService {
         }
         logger.info("issue ticket on reservation = {}", this.issueTicketOnReservation);
         logger.info("ticket expire = {}", this.ticketExpire);
+
+        if (stateService.get("migration_priceDown04_done").isEmpty()) {
+            changePrice04AndDoubleTickets();
+            stateService.set("migration_priceDown04_done", "true");
+        }
         logger.info("initialized");
     }
 
 
     public String getContractAddress() {
         return this.contractAddress;
+    }
+
+    private void changePrice04AndDoubleTickets() {
+        logger.info("* Doubling All Tickets...");
+        var count = 0;
+        var reservations = reservationRepo.findAll();
+        for (var r : reservations) {
+            var newR = new Reservation();
+            newR.setTx(r.getTx() + "_priceDown04");
+            newR.setAccount(r.getAccount());
+            reservationRepo.save(newR);
+            reservationRepo.flush();
+            var limo = getNextLimoForTicket();
+            var newT = issue(newR.getAccount(), limo, ticketExpire);
+            newT.setReservation(newR);
+            newR.setLimo(limo);
+            ticketRepo.save(newT);
+            ticketRepo.flush();
+            reservationRepo.save(newR);
+            reservationRepo.flush();
+            ++count;
+        }
+        logger.info("{} ticket issued", count);
     }
 
     public String getContractAbi() {

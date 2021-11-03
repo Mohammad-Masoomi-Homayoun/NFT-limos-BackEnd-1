@@ -65,7 +65,7 @@ public class ReservationTrackerService {
         logger.info("last scanned block : {}", getPreviousBlock());
         logger.info("using ethereum network : {}", etherscanBase);
         lastCheckedTimestamp = LocalDateTime.now();
-        update();
+//        update();
     }
 
     private String makeEtherscanURL(Long startBlock, Long endBlock) {
