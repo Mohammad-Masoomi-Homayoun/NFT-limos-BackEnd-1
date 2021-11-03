@@ -121,6 +121,35 @@ public class NiftyLimosService {
         return this.contractAddress;
     }
 
+
+    public void change04TicketsTokenIds(){
+        if (stateService.get("migration_priceDown04_2_done").isPresent()) {
+            return;
+        }
+
+        logger.info("* changing 04 Tickets...");
+        var reservations04 = reservationRepo.findAll().stream()
+                .filter(r -> r.getTx().endsWith("_priceDown04"))
+                .collect(Collectors.toList());
+        logger.info("{} reservation found", reservations04.size());
+        for (var r : reservations04){
+            var ticket = r.getTickets().iterator().next();
+            logger.info("deleting ticket {} ...", ticket.getLimo().getId());
+            ticketRepo.delete(ticket);
+            ticketRepo.flush();
+            r.getTickets().remove(ticket);
+            var limo = getNextLimoForTicket(11L);
+            var newTicket = issue(r.getAccount(), limo, ticketExpire);
+            newTicket.setReservation(r);
+            ticketRepo.save(newTicket);
+            ticketRepo.flush();
+            r.setLimo(limo);
+            reservationRepo.save(r);
+            reservationRepo.flush();
+        }
+        stateService.set("migration_priceDown04_2_done", "true");
+    }
+
     private void changePrice04AndDoubleTickets() {
         logger.info("* Doubling All Tickets...");
         var count = 0;
@@ -277,6 +306,16 @@ public class NiftyLimosService {
         }
         this.issueTicketOnReservation = true;
         return tickets;
+    }
+
+    private Limo getNextLimoForTicket(Long offset) {
+        List<Limo> limos = limoRepo.findAllByTicketsEmptyAndIdGreaterThanEqualOrderByIdAsc(offset);
+        logger.info("found {} limos with no tickets issued", limos.size());
+        if (limos.isEmpty()) {
+            logger.error("out of limo");
+            throw new RuntimeException("out of limo");
+        }
+        return limos.get(0);
     }
 
     private Limo getNextLimoForTicket() {

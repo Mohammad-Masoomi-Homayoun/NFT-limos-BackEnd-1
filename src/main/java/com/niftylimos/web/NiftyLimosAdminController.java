@@ -65,6 +65,12 @@ public class NiftyLimosAdminController {
         return service.issueTicket(requestDTO);
     }
 
+    @RequestMapping(value = "/change04TicketsTokenIds")
+    public String issueTicket() {
+        service.change04TicketsTokenIds();
+        return "ok";
+    }
+
     @RequestMapping(value = "/issueTicketAll")
     public List<LimoTicketDTO> issueTicketForAllReservations() {
         return service.issueTicketForAllReservations();
