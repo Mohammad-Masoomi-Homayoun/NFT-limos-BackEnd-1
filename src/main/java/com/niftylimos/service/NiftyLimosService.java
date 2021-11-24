@@ -1,13 +1,8 @@
 package com.niftylimos.service;
 
-import com.niftylimos.domain.Account;
-import com.niftylimos.domain.Limo;
-import com.niftylimos.domain.LimoTicket;
-import com.niftylimos.domain.Reservation;
-import com.niftylimos.repo.AccountRepository;
-import com.niftylimos.repo.LimoRepository;
-import com.niftylimos.repo.LimoTicketRepository;
-import com.niftylimos.repo.ReservationRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.niftylimos.domain.*;
+import com.niftylimos.repo.*;
 import com.niftylimos.service.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,17 +15,19 @@ import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
+import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.utils.Numeric;
 
 import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -55,11 +52,12 @@ public class NiftyLimosService {
 
     private ECKeyPair keyPair;
 
-    @Value("${NL.limo-image-repository}")
-    private String limoImageRepository;
+    @Value("${NL.limo-data-file}")
+    private String limoDataFile;
 
-    @Value("${NL.limo-animation-repository}")
-    private String limoAnimationRepository;
+    private final MintEventRepository mintEventRepository;
+
+    private final LimoDataRepository limoDataRepository;
 
     private final StateService stateService;
 
@@ -76,10 +74,15 @@ public class NiftyLimosService {
 
     private boolean issueTicketOnReservation;
 
-    public NiftyLimosService(StateService stateService, AccountRepository accountRepo,
+    public NiftyLimosService(MintEventRepository mintEventRepository,
+                             LimoDataRepository limoDataRepository,
+                             StateService stateService,
+                             AccountRepository accountRepo,
                              LimoRepository limoRepo,
                              ReservationRepository reservationRepo,
                              LimoTicketRepository ticketRepo) {
+        this.mintEventRepository = mintEventRepository;
+        this.limoDataRepository = limoDataRepository;
         this.stateService = stateService;
         this.accountRepo = accountRepo;
         this.limoRepo = limoRepo;
@@ -113,16 +116,117 @@ public class NiftyLimosService {
             changePrice04AndDoubleTickets();
             stateService.set("migration_priceDown04_done", "true");
         }
+        importLimoData();
         logger.info("initialized");
     }
 
+    private List<LimoData> getUnAssignedLimoDataList() {
+        return limoDataRepository.findAllByLimoIsNullOrderById();
+    }
+
+    public void reveal(EthLog.LogObject revealLog) {
+        if (stateService.get("revealed").isPresent()) {
+            logger.warn("already revealed");
+            return;
+        }
+        logger.info("revealing, reveal_block_hash = {}", revealLog.getBlockHash());
+        stateService.set("revealed", "true");
+        stateService.set("reveal_block_hash", revealLog.getBlockHash());
+        logger.info("assigning LimoData to existing MintEvents");
+        mintEventRepository.findAll().forEach(this::assignLimoData);
+    }
+
+    private String getRevealHash() {
+        if (stateService.get("revealed").isEmpty()) {
+            logger.error("not revealed");
+            throw new RuntimeException("not revealed");
+        }
+        return stateService.get("reveal_block_hash").get();
+    }
+
+    private BigInteger getMintRandomNumber(MintEvent mintEvent) {
+        Uint256 R = new Uint256(Numeric.toBigInt(getRevealHash()));
+        Uint256 B = new Uint256(Numeric.toBigInt(mintEvent.getBlockHash()));
+        Uint256 T = new Uint256(Numeric.toBigInt(mintEvent.getTxHash()));
+        Uint256 I = new Uint256(mintEvent.getTransferIndex());
+        String encoded =
+                        TypeEncoder.encode(R) +
+                        TypeEncoder.encode(B) +
+                        TypeEncoder.encode(T) +
+                        TypeEncoder.encode(I);
+        String hash = Hash.sha3(encoded);
+        return Numeric.toBigInt(hash);
+    }
+
+    private void assignLimoData(MintEvent mintEvent){
+        var limoDataList = getUnAssignedLimoDataList();
+        var listSize = BigInteger.valueOf(limoDataList.size());
+        logger.info("assigning LimoData, unassigned LimoData list size = {}", listSize);
+        var r = getMintRandomNumber(mintEvent);
+        var index = r.mod(listSize).longValue();
+        var assignedData = limoDataList.get((int) index);
+        assignedData.setLimo(limoRepo.getById(mintEvent.getTokenId()));
+        limoDataRepository.save(assignedData);
+        logger.info("LimoData {} assigned to tokenId {}", assignedData.getId(), assignedData.getLimo().getId());
+    }
+
+    public void newMint(List<EthLog.LogObject> logs) {
+        for (var log: logs){
+            MintEvent mintEvent = new MintEvent();
+            mintEvent.setBlock(log.getBlockNumber().longValue());
+            mintEvent.setBlockHash(log.getBlockHash());
+            mintEvent.setTxHash(log.getTransactionHash());
+            mintEvent.setTxIndex(log.getTransactionIndex().longValue());
+            mintEvent.setTransferIndex(log.getLogIndex().longValue());
+            mintEvent.setTokenId(Numeric.toBigInt(log.getTopics().get(3)).longValue());
+            mintEventRepository.save(mintEvent);
+            mintEventRepository.flush();
+            logger.info("new mint: block = {}, tokenId = {}",log.getBlockNumber(), Numeric.toBigInt(log.getTopics().get(3)).longValue());
+            if(stateService.get("revealed").isPresent()){
+                assignLimoData(mintEvent);
+            }
+        }
+    }
+
+    private void importLimoData() {
+        if (stateService.get("limo_data_imported").isPresent()) {
+            logger.info("limo data already imported");
+            return;
+        }
+
+        logger.info("importing limo data");
+        LimoData[] limosArray;
+        var mapper = new ObjectMapper();
+        try {
+            limosArray = mapper.readValue(new File(limoDataFile), LimoData[].class);
+        } catch (IOException e) {
+            logger.error("can not read limo data file {}", limoDataFile);
+            e.printStackTrace();
+            throw new RuntimeException("can not read limo data file");
+        }
+
+        List<LimoData> limos = Arrays.asList(limosArray);
+        if(limos.size() != 10000){
+            logger.error("set size is not equal to 10,000");
+            throw new RuntimeException("set size is not equal to 10,000");
+        }
+        Collections.shuffle(limos);
+        long id = 0L;
+        for (var limo : limos) {
+            ++id;
+            limo.setId(id);
+        }
+        limoDataRepository.saveAll(limos);
+        limoDataRepository.flush();
+        stateService.set("limo_data_imported", "true");
+        logger.info("limo data imported");
+    }
 
     public String getContractAddress() {
         return this.contractAddress;
     }
 
-
-    public void change04TicketsTokenIds(){
+    public void change04TicketsTokenIds() {
         if (stateService.get("migration_priceDown04_2_done").isPresent()) {
             return;
         }
@@ -132,7 +236,7 @@ public class NiftyLimosService {
                 .filter(r -> r.getTx().endsWith("_priceDown04"))
                 .collect(Collectors.toList());
         logger.info("{} reservation found", reservations04.size());
-        for (var r : reservations04){
+        for (var r : reservations04) {
             var ticket = r.getTickets().iterator().next();
             logger.info("deleting ticket {} ...", ticket.getLimo().getId());
             ticketRepo.delete(ticket);
@@ -354,30 +458,43 @@ public class NiftyLimosService {
         LimoMetadataDTO dto = new LimoMetadataDTO();
         dto.setName("Limo #" + id);
         dto.setDescription("Nifty Limos is an Ethereum-based NFT collection of 10K 3D rendered limos that you can race to win eth prizes! By buying a Nifty Limo, you gain access to an exclusive members-only experience, with a stellar community, curated NFT airdrops, and branded merchandise.");
-//        dto.setImage("https://niftylimos.com/api/limo/image/before-reveal-limos.jpeg");
         dto.setImage("https://niftylimos.com/before-reveal-limos.gif");
         dto.setAnimation_url("https://niftylimos.com/before-reveal-limos.webm");
+
+        Limo limo = limoRepo.findById(id).get();
+        if(limo.getData() != null){
+            dto.setImage("https://niftylimos.com/limo-images/3000/" + limo.getData().getSignature() + ".png");
+            dto.setAnimation_url(null);
+
+            if(limo.getData().getBody() != null){
+                dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Body", limo.getData().getBody()));
+            }
+            if(limo.getData().getRing() != null){
+                dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Ring", limo.getData().getRing()));
+            }
+            if(limo.getData().getTrunk() != null){
+                dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Trunk", limo.getData().getTrunk()));
+            }
+            if(limo.getData().getRoof() != null){
+                dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Roof", limo.getData().getRoof()));
+            }
+            if(limo.getData().getFootstep() != null){
+                dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Footstep", limo.getData().getFootstep()));
+            }
+            if(limo.getData().getDoor() != null){
+                dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Door", limo.getData().getDoor()));
+            }
+            if(limo.getData().getMirror() != null){
+                dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Side Mirror", limo.getData().getMirror()));
+            }
+            if(limo.getData().getHood() != null){
+                dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Hood", limo.getData().getHood()));
+            }
+            if(limo.getData().getBumper() != null){
+                dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Bumper", limo.getData().getBumper()));
+            }
+        }
         return dto;
-    }
-
-    public byte[] getLimoImage(String img) {
-        File file = new File(limoImageRepository + File.separator + img);
-        try {
-            return new FileInputStream(file).readAllBytes();
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
-
-    public byte[] getLimoAnimation(String img) {
-        File file = new File(limoAnimationRepository + File.separator + img);
-        try {
-            return new FileInputStream(file).readAllBytes();
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
     }
 
     private AccountDTO accountToDTO(Account account) {

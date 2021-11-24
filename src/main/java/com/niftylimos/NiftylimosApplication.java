@@ -1,19 +1,18 @@
 package com.niftylimos;
 
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import javax.transaction.Transactional;
+
 @SpringBootApplication
 @EnableScheduling
-public class NiftylimosApplication implements CommandLineRunner {
+@Transactional
+public class NiftylimosApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(NiftylimosApplication.class, args);
     }
 
-    @Override
-    public void run(String... args) throws Exception {
-    }
 }

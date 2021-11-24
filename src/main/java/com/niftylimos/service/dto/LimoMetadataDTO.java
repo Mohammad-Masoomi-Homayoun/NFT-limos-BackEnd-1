@@ -15,5 +15,13 @@ public class LimoMetadataDTO {
     private String description;
     private String image;
     private String animation_url;
-    private List<Object> attributes = new ArrayList<>();
+    private List<AttrDTO> attributes = new ArrayList<>();
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class AttrDTO{
+        private String trait_type;
+        private String value;
+    }
 }
