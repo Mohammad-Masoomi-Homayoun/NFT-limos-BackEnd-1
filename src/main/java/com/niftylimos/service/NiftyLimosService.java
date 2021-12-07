@@ -329,6 +329,10 @@ public class NiftyLimosService {
         return reservationRepo.count();
     }
 
+    public Long getMintedCount() {
+        return mintEventRepository.count();
+    }
+
     public LimoDTO getLimo(Long tokenId) {
         return limoRepo.findById(tokenId).map(this::limoToDTO).orElse(null);
     }
