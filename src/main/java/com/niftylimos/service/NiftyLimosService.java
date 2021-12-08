@@ -458,8 +458,15 @@ public class NiftyLimosService {
         reservationRepo.save(reservation);
     }
 
-    public String getLimoDataSignature(Long id){
-        return limoDataRepository.findById(id).get().getSignature();
+    private List<String> sigs;
+    public List<String> getLimos(){
+        if(sigs != null){
+            return sigs;
+        }
+        sigs = limoDataRepository.findAll().stream()
+                .map(LimoData::getSignature)
+                .collect(Collectors.toList());
+        return sigs;
     }
 
     public LimoMetadataDTO getLimoMetadata(Long id) {
