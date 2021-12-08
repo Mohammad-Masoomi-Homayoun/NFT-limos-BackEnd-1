@@ -58,4 +58,9 @@ public class NiftyLimosPublicController {
     public LimoMetadataDTO getLimo(@PathVariable Long id) {
         return service.getLimoMetadata(id);
     }
+
+    @RequestMapping(value = "/limo/{id}/signature")
+    public String getLimoSignature(@PathVariable Long id) {
+        return service.getLimoDataSignature(id);
+    }
 }
