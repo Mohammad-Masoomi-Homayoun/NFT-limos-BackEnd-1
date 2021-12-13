@@ -82,10 +82,14 @@ public class ReservationTrackerService {
     }
 
 
-    @Scheduled(fixedDelay = 3 * 60 * 1000)
+    @Scheduled(fixedDelay = 60 * 1000)
     protected void scan() {
         Long from = getPreviousBlock() + 1;
-        Long to = getEthLatestBlockNumber();
+        //avoid too early query, let etherscan 10 blocks to index all txs
+        Long to = getEthLatestBlockNumber() - 10L;
+        if(!(to > from)){
+            return;
+        }
         String url = makeEtherscanURL(from, to);
         EtherScanResult result =
                 this.restTemplate.postForObject(url, "", EtherScanResult.class);
