@@ -39,10 +39,6 @@ public class ReservationTrackerService {
 
     private BigDecimal price;
 
-    private AtomicLong newReservations = new AtomicLong(0L);
-
-    private LocalDateTime lastCheckedTimestamp = LocalDateTime.now();
-
     @Value("${NL.etherscan-apikey}")
     private String etherscanAPIkey;
 
@@ -64,8 +60,6 @@ public class ReservationTrackerService {
         this.restTemplate = new RestTemplate();
         logger.info("last scanned block : {}", getPreviousBlock());
         logger.info("using ethereum network : {}", etherscanBase);
-        lastCheckedTimestamp = LocalDateTime.now();
-//        update();
     }
 
     private String makeEtherscanURL(Long startBlock, Long endBlock) {
@@ -87,18 +81,12 @@ public class ReservationTrackerService {
         return Long.parseLong(stateService.get("reservation-tracker-block").orElse("0"));
     }
 
-    @Scheduled(fixedRate = 60 * 60 * 1000)
-    protected void report() {
-        logger.info("new reservations found from {} = {}", lastCheckedTimestamp, newReservations);
-        lastCheckedTimestamp = LocalDateTime.now();
-        newReservations = new AtomicLong(0);
-    }
 
-    @Scheduled(fixedRate = 60 * 1000)
-    protected void update() {
-        boolean needReport = false;
-        Long latestBlock = getEthLatestBlockNumber();
-        String url = makeEtherscanURL(getPreviousBlock() + 1, latestBlock);
+    @Scheduled(fixedDelay = 3 * 60 * 1000)
+    protected void scan() {
+        Long from = getPreviousBlock() + 1;
+        Long to = getEthLatestBlockNumber();
+        String url = makeEtherscanURL(from, to);
         EtherScanResult result =
                 this.restTemplate.postForObject(url, "", EtherScanResult.class);
         if (result == null) {
@@ -107,6 +95,9 @@ public class ReservationTrackerService {
         var txs = result.result;
         if (txs == null) {
             txs = new ArrayList<>();
+        }
+        if(txs.size() > 0){
+            logger.info("new txs found, from: {}, to: {}", from, to);
         }
         List<Map<String, String>> valid_txs = txs.stream()
 
@@ -130,15 +121,11 @@ public class ReservationTrackerService {
             String acc = tx.get("from").toLowerCase();
             int count = new BigDecimal(tx.get("value")).divide(price).intValue();
             for (int i = 0; i < count; i++) {
-                needReport = true;
+                logger.info("reservation tx hash : {}", tx.get("hash"));
                 service.reserve(acc, tx.get("hash") + "_" + i);
-                newReservations.incrementAndGet();
             }
         }
-        updated(latestBlock);
-        if (needReport) {
-            report();
-        }
+        updated(to);
     }
 
     private void updated(Long block) {

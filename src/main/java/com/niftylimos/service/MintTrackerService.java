@@ -115,7 +115,6 @@ public class MintTrackerService {
         long from = lastChecked + 1;
         long to = latestEthBlock;
 
-        logger.info("scanning from {} to {}", from, to);
         if (!revealed()) {
             var revealLogs = getRevealLogs(from, to);
             if (!revealLogs.isEmpty()) {

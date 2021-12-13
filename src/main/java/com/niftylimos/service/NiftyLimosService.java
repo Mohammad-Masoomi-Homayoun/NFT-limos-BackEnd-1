@@ -444,6 +444,7 @@ public class NiftyLimosService {
     }
 
     public void reserve(String acc, String tx) {
+        logger.info("reserving... account: {}, tx: {}", acc, tx);
         Account account = getOrCreateAccount(acc);
         Reservation reservation = new Reservation(account);
         reservation.setTx(tx);
