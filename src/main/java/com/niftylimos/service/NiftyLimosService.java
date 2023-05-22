@@ -200,26 +200,29 @@ public class NiftyLimosService {
         try {
             limosArray = mapper.readValue(new File(limoDataFile), LimoData[].class);
         } catch (IOException e) {
-            logger.error("can not read limo data file {}", limoDataFile);
-            e.printStackTrace();
-            throw new RuntimeException("can not read limo data file");
+//            logger.error("can not read limo data file {}", limoDataFile);
+//            e.printStackTrace();
+//            throw new RuntimeException("can not read limo data file");
         }
 
-        List<LimoData> limos = Arrays.asList(limosArray);
-        if(limos.size() != 10000){
-            logger.error("set size is not equal to 10,000");
-            throw new RuntimeException("set size is not equal to 10,000");
-        }
-        Collections.shuffle(limos);
-        long id = 0L;
-        for (var limo : limos) {
-            ++id;
-            limo.setId(id);
-        }
-        limoDataRepository.saveAll(limos);
-        limoDataRepository.flush();
-        stateService.set("limo_data_imported", "true");
-        logger.info("limo data imported");
+//        List<LimoData> limos = Arrays.asList(limosArray);
+//        if(limos.size() != 10000){
+//            logger.error("set size is not equal to 10,000");
+//            throw new RuntimeException("set size is not equal to 10,000");
+//        }
+//        Collections.shuffle(limos);
+//        long id = 0L;
+//        for (var limo : limos) {
+//            ++id;
+//            limo.setId(id);
+//        }
+//        limoDataRepository.saveAll(limos);
+//        limoDataRepository.flush(); if(limos.size() != 10000){
+//            logger.error("set size is not equal to 10,000");
+//            throw new RuntimeException("set size is not equal to 10,000");
+//        }
+//        stateService.set("limo_data_imported", "true");
+//        logger.info("limo data imported");
     }
 
     public String getContractAddress() {
