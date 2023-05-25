@@ -1,7 +1,7 @@
-package com.niftylimos.web;
+package com.niftylimos.controller;
 
+import com.niftylimos.domain.dto.*;
 import com.niftylimos.service.*;
-import com.niftylimos.service.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;

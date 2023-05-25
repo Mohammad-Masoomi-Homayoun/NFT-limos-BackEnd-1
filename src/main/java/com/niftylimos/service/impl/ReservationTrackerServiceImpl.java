@@ -1,5 +1,8 @@
-package com.niftylimos.service;
+package com.niftylimos.service.impl;
 
+import com.niftylimos.service.NiftyLimosService;
+import com.niftylimos.service.ReservationTrackerSOSService;
+import com.niftylimos.service.StateService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,23 +12,23 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.utils.Convert;
 
 import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional
-public class ReservationTrackerService {
+public class ReservationTrackerServiceImpl implements ReservationTrackerSOSService {
 
-    private static final Logger logger = LoggerFactory.getLogger(ReservationTrackerService.class);
+    private static final Logger logger = LoggerFactory.getLogger(ReservationTrackerServiceImpl.class);
 
     private final StateService stateService;
 
@@ -47,7 +50,7 @@ public class ReservationTrackerService {
 
     private RestTemplate restTemplate;
 
-    public ReservationTrackerService(StateService stateService, NiftyLimosService service) {
+    public ReservationTrackerServiceImpl(StateService stateService, NiftyLimosService service) {
         this.stateService = stateService;
         this.service = service;
     }
@@ -82,8 +85,13 @@ public class ReservationTrackerService {
     }
 
 
+    @Override
+    public List<EthLog.LogObject> getTransferLogs(long from, long to) throws IOException {
+        return null;
+    }
+
     @Scheduled(fixedDelay = 60 * 1000)
-    protected void scan() {
+    public void scan() {
         Long from = getPreviousBlock() + 1;
         //avoid too early query, let etherscan 10 blocks to index all txs
         Long to = getEthLatestBlockNumber() - 10L;

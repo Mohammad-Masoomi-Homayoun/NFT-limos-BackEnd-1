@@ -1,4 +1,4 @@
-package com.niftylimos.web;
+package com.niftylimos.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

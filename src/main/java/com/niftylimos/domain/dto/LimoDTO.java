@@ -1,4 +1,4 @@
-package com.niftylimos.service.dto;
+package com.niftylimos.domain.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,12 +10,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LimoDTO {
-//    private long id;
-//    private String name;
-//    private String description;
-//    private String image;
-//    private String external_url;
-//    private List attributes;
 
     private Long id;
 

@@ -1,17 +1,19 @@
-package com.niftylimos.service.dto;
+package com.niftylimos.domain.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class LimoTicketDTO {
+public class ReservationDTO {
     private Long id;
-    private Long reservation;
     private String account;
     private Long limo;
-    private String signature;
-    private Long expire;
+    private List<Long> tickets = new ArrayList<>();
+
 }

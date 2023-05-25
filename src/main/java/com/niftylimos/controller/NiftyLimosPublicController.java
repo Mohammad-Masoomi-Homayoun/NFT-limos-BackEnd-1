@@ -1,10 +1,10 @@
-package com.niftylimos.web;
+package com.niftylimos.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.niftylimos.domain.dto.AccountDTO;
+import com.niftylimos.domain.dto.LimoMetadataDTO;
 import com.niftylimos.service.NiftyLimosService;
-import com.niftylimos.service.dto.AccountDTO;
-import com.niftylimos.service.dto.LimoMetadataDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;

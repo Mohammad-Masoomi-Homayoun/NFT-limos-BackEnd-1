@@ -1,4 +1,4 @@
-package com.niftylimos.service.dto;
+package com.niftylimos.domain.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.niftylimos</groupId>
     <artifactId>niftylimos-back</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.2-SNAPSHOT</version>
     <name>niftylimos-back</name>
     <description>Back-End of Niftylimos</description>
     <properties>
@@ -21,6 +21,7 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.12</version>
             <scope>runtime</scope>
         </dependency>
 

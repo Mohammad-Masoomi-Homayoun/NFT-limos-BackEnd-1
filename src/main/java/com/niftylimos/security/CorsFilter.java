@@ -1,4 +1,4 @@
-package com.niftylimos.web.config;
+package com.niftylimos.security;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -11,9 +11,9 @@ import java.io.IOException;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
-public class CorsFilter2 implements Filter {
+public class CorsFilter implements Filter {
 
-    public CorsFilter2() {
+    public CorsFilter() {
     }
 
     @Override
