@@ -3,10 +3,10 @@ package com.niftylimos.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.niftylimos.domain.*;
 import com.niftylimos.domain.dto.*;
-import com.niftylimos.repo.*;
+import com.niftylimos.repository.*;
 import com.niftylimos.service.NiftyLimosService;
 import com.niftylimos.service.StateService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,7 +35,7 @@ import java.util.stream.LongStream;
 
 @Service
 @Transactional
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class NiftyLimosServiceImpl implements NiftyLimosService {
 
     private static final Logger logger = LoggerFactory.getLogger(NiftyLimosService.class);
@@ -72,9 +72,10 @@ public class NiftyLimosServiceImpl implements NiftyLimosService {
 
     private final LimoTicketRepository ticketRepo;
 
+    private  ECKeyPair keyPair;
+
     private  boolean issueTicketOnReservation;
 
-    private  ECKeyPair keyPair;
 
 
     @PostConstruct

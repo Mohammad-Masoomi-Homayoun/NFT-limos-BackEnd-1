@@ -9,46 +9,46 @@ import java.util.stream.Collectors;
 
 public class Statistics {
 
-    public static Limo toLimo(LimoData limoData){
-        Limo limo = new Limo();
+    public static LimoDto toLimo(LimoData limoData){
+        LimoDto limoDto = new LimoDto();
 
         if(limoData.getBody() != null){
-            limo.getAttributes().put("Body", limoData.getBody());
+            limoDto.getAttributes().put("Body", limoData.getBody());
         }
 
         if(limoData.getRing() != null){
-            limo.getAttributes().put("Ring", limoData.getRing());
+            limoDto.getAttributes().put("Ring", limoData.getRing());
         }
 
         if(limoData.getTrunk() != null){
-            limo.getAttributes().put("Trunk", limoData.getTrunk());
+            limoDto.getAttributes().put("Trunk", limoData.getTrunk());
         }
 
         if(limoData.getRoof() != null){
-            limo.getAttributes().put("Roof", limoData.getRoof());
+            limoDto.getAttributes().put("Roof", limoData.getRoof());
         }
 
         if(limoData.getFootstep() != null){
-            limo.getAttributes().put("Footstep", limoData.getFootstep());
+            limoDto.getAttributes().put("Footstep", limoData.getFootstep());
         }
 
         if(limoData.getDoor() != null){
-            limo.getAttributes().put("Door", limoData.getDoor());
+            limoDto.getAttributes().put("Door", limoData.getDoor());
         }
 
         if(limoData.getMirror() != null){
-            limo.getAttributes().put("Mirror", limoData.getMirror());
+            limoDto.getAttributes().put("Mirror", limoData.getMirror());
         }
 
         if(limoData.getHood() != null){
-            limo.getAttributes().put("Hood", limoData.getHood());
+            limoDto.getAttributes().put("Hood", limoData.getHood());
         }
 
         if(limoData.getBumper() != null){
-            limo.getAttributes().put("Bumper", limoData.getBumper());
+            limoDto.getAttributes().put("Bumper", limoData.getBumper());
         }
 
-        return limo;
+        return limoDto;
     }
 
     public static Map<String, Map<String, Double>> calcTraitStatistics(Collection<LimoData> limoData){

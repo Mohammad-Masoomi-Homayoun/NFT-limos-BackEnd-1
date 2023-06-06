@@ -1,7 +1,7 @@
 package com.niftylimos.service.impl;
 
 import com.niftylimos.domain.NiftyLimosState;
-import com.niftylimos.repo.NiftyLimosStateRepository;
+import com.niftylimos.repository.NiftyLimosStateRepository;
 import com.niftylimos.service.StateService;
 import org.springframework.stereotype.Service;
 
