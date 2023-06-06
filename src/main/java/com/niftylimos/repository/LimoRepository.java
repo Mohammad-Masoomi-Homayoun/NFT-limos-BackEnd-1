@@ -1,4 +1,4 @@
-package com.niftylimos.repo;
+package com.niftylimos.repository;
 
 import com.niftylimos.domain.Limo;
 import org.springframework.data.jpa.repository.JpaRepository;

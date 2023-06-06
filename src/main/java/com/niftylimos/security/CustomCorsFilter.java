@@ -11,9 +11,9 @@ import java.io.IOException;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
-public class CorsFilter implements Filter {
+public class CustomCorsFilter implements Filter {
 
-    public CorsFilter() {
+    public CustomCorsFilter() {
     }
 
     @Override

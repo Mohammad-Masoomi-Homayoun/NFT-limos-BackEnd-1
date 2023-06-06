@@ -12,7 +12,7 @@ import java.util.Map;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Limo {
+public class LimoDto {
     private String signature;
     private Map<String, String> attributes = new HashMap<>();
     private Rank rank = new Rank();
