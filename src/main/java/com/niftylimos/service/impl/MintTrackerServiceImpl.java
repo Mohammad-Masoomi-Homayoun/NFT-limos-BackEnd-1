@@ -129,5 +129,6 @@ public class MintTrackerServiceImpl implements MintTrackerService {
             niftyLimosService.newMint(mintLogs);
         }
         setLastCheckedBlock(to);
+        logger.info("mint done ************* "+from+" **** "+to);
     }
 }

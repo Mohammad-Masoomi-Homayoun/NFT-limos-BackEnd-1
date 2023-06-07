@@ -72,10 +72,9 @@ public class NiftyLimosServiceImpl implements NiftyLimosService {
 
     private final LimoTicketRepository ticketRepo;
 
-    private  ECKeyPair keyPair;
+    private ECKeyPair keyPair;
 
-    private  boolean issueTicketOnReservation;
-
+    private boolean issueTicketOnReservation;
 
 
     @PostConstruct
@@ -145,20 +144,23 @@ public class NiftyLimosServiceImpl implements NiftyLimosService {
         return Numeric.toBigInt(hash);
     }
 
-    private void assignLimoData(MintEvent mintEvent){
+    private void assignLimoData(MintEvent mintEvent) {
         var limoDataList = getUnAssignedLimoDataList();
         var listSize = BigInteger.valueOf(limoDataList.size());
         logger.info("assigning LimoData, unassigned LimoData list size = {}", listSize);
-        var r = getMintRandomNumber(mintEvent);
-        var index = r.mod(listSize).longValue();
-        var assignedData = limoDataList.get((int) index);
-        assignedData.setLimo(limoRepo.getById(mintEvent.getTokenId()));
-        limoDataRepository.save(assignedData);
-        logger.info("LimoData {} assigned to tokenId {}", assignedData.getId(), assignedData.getLimo().getId());
+        if (listSize.compareTo(BigInteger.ZERO) > 0) {
+            var r = getMintRandomNumber(mintEvent);
+            var index = r.mod(listSize).longValue();
+            var assignedData = limoDataList.get((int) index);
+            assignedData.setLimo(limoRepo.getById(mintEvent.getTokenId()));
+            limoDataRepository.save(assignedData);
+            logger.info("LimoData {} assigned to tokenId {}", assignedData.getId(), assignedData.getLimo().getId());
+        } else {
+            logger.info("unassigned LimoData list size = 0");        }
     }
 
     public void newMint(List<EthLog.LogObject> logs) {
-        for (var log: logs){
+        for (var log : logs) {
             MintEvent mintEvent = new MintEvent();
             mintEvent.setBlock(log.getBlockNumber().longValue());
             mintEvent.setBlockHash(log.getBlockHash());
@@ -168,8 +170,8 @@ public class NiftyLimosServiceImpl implements NiftyLimosService {
             mintEvent.setTokenId(Numeric.toBigInt(log.getTopics().get(3)).longValue());
             mintEventRepository.save(mintEvent);
             mintEventRepository.flush();
-            logger.info("new mint: block = {}, tokenId = {}",log.getBlockNumber(), Numeric.toBigInt(log.getTopics().get(3)).longValue());
-            if(stateService.get("revealed").isPresent()){
+            logger.info("new mint: block = {}, tokenId = {}", log.getBlockNumber(), Numeric.toBigInt(log.getTopics().get(3)).longValue());
+            if (stateService.get("revealed").isPresent()) {
                 assignLimoData(mintEvent);
             }
         }
@@ -450,8 +452,9 @@ public class NiftyLimosServiceImpl implements NiftyLimosService {
     }
 
     private List<String> sigs;
-    public List<String> getLimos(){
-        if(sigs != null){
+
+    public List<String> getLimos() {
+        if (sigs != null) {
             return sigs;
         }
         sigs = limoDataRepository.findAll().stream()
@@ -468,35 +471,35 @@ public class NiftyLimosServiceImpl implements NiftyLimosService {
         dto.setAnimation_url("https://niftylimos.com/before-reveal-limos.webm");
 
         Limo limo = limoRepo.findById(id).get();
-        if(limo.getData() != null){
+        if (limo.getData() != null) {
             dto.setImage("https://niftylimos.com/limo-images/3000/" + limo.getData().getSignature() + ".png");
             dto.setAnimation_url(null);
 
-            if(limo.getData().getBody() != null){
+            if (limo.getData().getBody() != null) {
                 dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Body", limo.getData().getBody()));
             }
-            if(limo.getData().getRing() != null){
+            if (limo.getData().getRing() != null) {
                 dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Ring", limo.getData().getRing()));
             }
-            if(limo.getData().getTrunk() != null){
+            if (limo.getData().getTrunk() != null) {
                 dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Trunk", limo.getData().getTrunk()));
             }
-            if(limo.getData().getRoof() != null){
+            if (limo.getData().getRoof() != null) {
                 dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Roof", limo.getData().getRoof()));
             }
-            if(limo.getData().getFootstep() != null){
+            if (limo.getData().getFootstep() != null) {
                 dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Footstep", limo.getData().getFootstep()));
             }
-            if(limo.getData().getDoor() != null){
+            if (limo.getData().getDoor() != null) {
                 dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Door", limo.getData().getDoor()));
             }
-            if(limo.getData().getMirror() != null){
+            if (limo.getData().getMirror() != null) {
                 dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Side Mirror", limo.getData().getMirror()));
             }
-            if(limo.getData().getHood() != null){
+            if (limo.getData().getHood() != null) {
                 dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Hood", limo.getData().getHood()));
             }
-            if(limo.getData().getBumper() != null){
+            if (limo.getData().getBumper() != null) {
                 dto.getAttributes().add(new LimoMetadataDTO.AttrDTO("Bumper", limo.getData().getBumper()));
             }
         }
