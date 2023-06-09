@@ -12,6 +12,7 @@
     <artifactId>niftylimos-back</artifactId>
     <version>0.0.2-SNAPSHOT</version>
     <name>niftylimos-back</name>
+    <packaging>war</packaging>
     <description>Back-End of Niftylimos</description>
     <properties>
         <java.version>11</java.version>
