@@ -1,14 +1,10 @@
-# Use the official Apache Tomcat image as a base image
-FROM tomcat:9-jdk11-openjdk-slim
+FROM openjdk:11-jre-slim
 
-# Remove the default Tomcat webapps
-RUN rm -rf /usr/local/tomcat/webapps/*
+# Copy your WAR file to the container
+COPY target/niftylimos-back-*.war app.war
 
-# Copy the WAR file from the target directory to the Tomcat webapps directory
-COPY target/niftylimos-back-*.war /usr/local/tomcat/webapps/ROOT.war
+# Command to run the Spring Boot WAR
+ENTRYPOINT ["java", "-jar", "app.war"]
 
-# Expose port 8080 for the Tomcat server
+# Expose the port your app runs on
 EXPOSE 8080
-
-# Start the Tomcat server
-CMD ["catalina.sh", "run"]
