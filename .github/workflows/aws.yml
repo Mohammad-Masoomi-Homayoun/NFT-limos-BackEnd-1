@@ -58,9 +58,7 @@ jobs:
           tags: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
           build-args: |
             WAR_FILE=target/*.war
-          load: true
           no-cache: true
-          debug: true
 
       - name: Get current task definition
         id: get-task-definition
