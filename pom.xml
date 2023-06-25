@@ -6,19 +6,18 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>2.5.4</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <relativePath/>
     </parent>
     <groupId>com.niftylimos</groupId>
     <artifactId>niftylimos-back</artifactId>
     <version>0.0.2-SNAPSHOT</version>
     <name>niftylimos-back</name>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
     <description>Back-End of Niftylimos</description>
     <properties>
         <java.version>11</java.version>
     </properties>
     <dependencies>
-
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
@@ -90,5 +89,22 @@
             </plugin>
         </plugins>
     </build>
+    <distributionManagement>
+        <repository>
+            <id>groups-public</id>
+            <name>Nexus Releases</name>
+            <url>https://repo.sadad.co.ir/repository/baam-maven-releases/</url>
+        </repository>
+        <site>
+            <id>groups-public</id>
+            <name>Nexus Sites</name>
+            <url>https://repo.sadad.co.ir/repository/baam-maven-group/</url>
+        </site>
+        <snapshotRepository>
+            <id>groups-public</id>
+            <name>Nexus Snapshot</name>
+            <url>https://repo.sadad.co.ir/repository/baam-maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 
 </project>

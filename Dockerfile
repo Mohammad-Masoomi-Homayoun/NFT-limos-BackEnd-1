@@ -15,14 +15,17 @@ WORKDIR /home/maven/src
 RUN mvn clean package -DskipTests
 
 # Creating the final image
-FROM tomcat:9.0-jdk11 as finalApp
+FROM adoptopenjdk/openjdk11:alpine as finalApp
 
-# Copy the war file from the builder image to the Tomcat webapps directory
-COPY --from=builder /home/maven/src/target/*.war /usr/local/tomcat/webapps/ROOT.war
+ARG JAR_FILE=target/niftylimos-back-0.0.2-SNAPSHOT.jar
+
+WORKDIR /opt/app
+
+# Copy the JAR file from the maven stage to the /opt/app directory of the current stage.
+COPY --from=builder /home/maven/src/${JAR_FILE} /opt/app/
 
 # Expose the Tomcat port
 EXPOSE 8080
 
-#ENTRYPOINT ["-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n"]
-# Start Tomcat
-CMD ["catalina.sh", "run"]
+# Set the entrypoint command to run the application
+ENTRYPOINT ["java", "-jar", "niftylimos-back-0.0.2-SNAPSHOT.jar"]
